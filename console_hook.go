@@ -28,7 +28,7 @@ func (hook *ConsoleHook) Fire(entry *logrus.Entry) error {
 	if len(formatted) == 0 {
 		return err
 	}
-	colorFunc := getColor(entry.Level)
+	colorFunc := GetColor(entry.Level)
 	formattedString := colorFunc(string(formatted))
 
 	if _, err = os.Stderr.WriteString(formattedString); err != nil {

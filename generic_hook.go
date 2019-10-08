@@ -38,7 +38,8 @@ func (hook *GenericHook) Levels() []logrus.Level {
 	return []logrus.Level{}
 }
 
-func getColor(level logrus.Level) func(format string, args ...interface{}) string {
+// GetColor returns an ANSI color formatting function for every logrus logging level
+func GetColor(level logrus.Level) func(format string, args ...interface{}) string {
 	switch level {
 	case logrus.DebugLevel, logrus.TraceLevel:
 		return color.HiGreenString
