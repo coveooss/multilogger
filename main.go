@@ -16,6 +16,7 @@ const DisabledLevel logrus.Level = 9999
 // DisabledLevelName is the textual name of the
 const DisabledLevelName string = "disabled"
 
+// AcceptedLevels returns all accepted logrus levels
 func AcceptedLevels() []string {
 	levels := []string{DisabledLevelName}
 	for _, level := range logrus.AllLevels {
@@ -24,6 +25,7 @@ func AcceptedLevels() []string {
 	return levels
 }
 
+// AcceptedLevelsString returns all accepted logrus levels as a comma-separated string
 func AcceptedLevelsString() string {
 	return strings.Join(AcceptedLevels(), ", ")
 }
@@ -72,7 +74,7 @@ type MultiLogger struct {
 }
 
 // New creates a new Multilogger instance
-func New(consoleLevel interface{}, fileLevel interface{}, fileName string, module string) *MultiLogger {
+func New(consoleLevel interface{}, fileLevel interface{}, filename string, module string) *MultiLogger {
 	logger := &MultiLogger{
 		Logger: logrus.New(),
 	}
@@ -83,10 +85,7 @@ func New(consoleLevel interface{}, fileLevel interface{}, fileName string, modul
 		TimestampFormat: timestampFormat,
 		LogFormat:       fmt.Sprintf("[%s]", module) + " %time% %lvl% %msg%\n",
 	}
-	if fileName == "" {
-		fileName = module + ".log"
-	}
-	logger.fileHook = NewFileHook(fileName, ParseLogLevel(fileLevel), formatter)
+	logger.fileHook = NewFileHook(filename, ParseLogLevel(fileLevel), formatter)
 	logger.consoleHook = NewConsoleHook(ParseLogLevel(consoleLevel), formatter)
 	logger.refreshLoggers()
 
@@ -102,6 +101,13 @@ func (logger *MultiLogger) SetConsoleLevel(level interface{}) {
 // SetFileLevel modifies the logging level for the file logger
 func (logger *MultiLogger) SetFileLevel(level interface{}) {
 	logger.fileHook.MinimumLevel = ParseLogLevel(level)
+	logger.refreshLoggers()
+}
+
+// ConfigureFileLogger modifies the logging level and filename for the file logger
+func (logger *MultiLogger) ConfigureFileLogger(level interface{}, newFilename string) {
+	logger.fileHook.MinimumLevel = ParseLogLevel(level)
+	logger.fileHook.SetFilename(newFilename)
 	logger.refreshLoggers()
 }
 
