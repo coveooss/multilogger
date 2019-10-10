@@ -68,11 +68,11 @@ func ParseLogLevel(level interface{}) (logrus.Level, error) {
 		}
 		parsedLevel, err := logrus.ParseLevel(levelString)
 		if err != nil {
-			return 0, fmt.Errorf("Unable to parse logging level: %v", err)
+			return DisabledLevel, fmt.Errorf("Unable to parse logging level: %v", err)
 		}
 		return parsedLevel, nil
 	}
-	return 0, fmt.Errorf("Unable to parse the given logging level %v. It has to be a string or an integer", level)
+	return DisabledLevel, fmt.Errorf("Unable to parse the given logging level %v. It has to be a string or an integer", level)
 }
 
 // MultiLogger represents a logger that logs to both a file and the console at different (configurable) levels
