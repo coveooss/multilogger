@@ -7,14 +7,15 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	easy "github.com/t-tomalak/logrus-easy-formatter"
 )
 
-// DisabledLevel can be set when one of the logging hooks should be disabled
-const DisabledLevel logrus.Level = 9999
-
-// DisabledLevelName is the textual name of the
-const DisabledLevelName string = "disabled"
+const (
+	timestampFormat = "2006/01/02 15:04:05.000"
+	// DisabledLevel can be set when one of the logging hooks should be disabled
+	DisabledLevel logrus.Level = 9999
+	// DisabledLevelName is the textual name of the
+	DisabledLevelName string = "disabled"
+)
 
 // AcceptedLevels returns all accepted logrus levels
 func AcceptedLevels() []string {
@@ -81,12 +82,17 @@ func New(consoleLevel interface{}, fileLevel interface{}, filename string, modul
 	logger.Out = ioutil.Discard      // Discard all logs to the main logger
 	logger.Level = logrus.TraceLevel // Always log at TRACE level. Hooks will decide if the log goes through or not
 
-	formatter := &easy.Formatter{
+	format := fmt.Sprintf("[%s]", module) + " %time% %lvl% %msg%\n"
+	logger.fileHook = NewFileHook(filename, ParseLogLevel(fileLevel), &Formatter{
 		TimestampFormat: timestampFormat,
-		LogFormat:       fmt.Sprintf("[%s]", module) + " %time% %lvl% %msg%\n",
-	}
-	logger.fileHook = NewFileHook(filename, ParseLogLevel(fileLevel), formatter)
-	logger.consoleHook = NewConsoleHook(ParseLogLevel(consoleLevel), formatter)
+		LogFormat:       format,
+		Color:           false,
+	})
+	logger.consoleHook = NewConsoleHook(ParseLogLevel(consoleLevel), &Formatter{
+		TimestampFormat: timestampFormat,
+		LogFormat:       format,
+		Color:           true,
+	})
 	logger.refreshLoggers()
 
 	return logger

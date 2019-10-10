@@ -9,5 +9,4 @@ require (
 	github.com/mattn/go-isatty v0.0.9 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.2.2
-	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
 )

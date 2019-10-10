@@ -28,10 +28,8 @@ func (hook *ConsoleHook) Fire(entry *logrus.Entry) error {
 	if len(formatted) == 0 {
 		return err
 	}
-	colorFunc := GetColor(entry.Level)
-	formattedString := colorFunc(string(formatted))
 
-	if _, err = os.Stderr.WriteString(formattedString); err != nil {
+	if _, err = os.Stderr.WriteString(string(formatted)); err != nil {
 		return fmt.Errorf("Unable to print logs to file: %v", err)
 	}
 

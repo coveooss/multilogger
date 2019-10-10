@@ -7,8 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const timestampFormat = "2006/01/02 15:04:05.000"
-
 // GenericHook represents a hook that logs at a given level. This struct must be extended to implement the Fire func
 type GenericHook struct {
 	Formatter    logrus.Formatter
