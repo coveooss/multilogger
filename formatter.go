@@ -1,10 +1,12 @@
 package multilogger
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/acarl005/stripansi"
 	"github.com/sirupsen/logrus"
 )
 
@@ -35,14 +37,20 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 		timestampFormat = defaultTimestampFormat
 	}
 
-	colorFunc := GetColor(entry.Level)
+	var sprintf func(string, ...interface{}) string
+	if f.Color {
+		sprintf = GetColor(entry.Level)
+	} else {
+		sprintf = fmt.Sprintf
+		entry.Message = stripansi.Strip(entry.Message)
+	}
 
 	output = strings.Replace(output, "%time%", entry.Time.Format(timestampFormat), 1)
 
-	output = strings.Replace(output, "%msg%", colorFunc(entry.Message), 1)
+	output = strings.Replace(output, "%msg%", sprintf(entry.Message), 1)
 
-	level := strings.ToUpper(entry.Level.String())
-	output = strings.Replace(output, "%lvl%", colorFunc(level), 1)
+	level := fmt.Sprintf("%-8s", strings.ToUpper(entry.Level.String()))
+	output = strings.Replace(output, "%lvl%", sprintf(level), 1)
 
 	for k, val := range entry.Data {
 		switch v := val.(type) {

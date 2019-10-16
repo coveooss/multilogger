@@ -7,12 +7,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// ConsoleHook represents a logger that will write logs to the console
+// ConsoleHook represents a logger that will write logs to the console.
 type ConsoleHook struct {
 	*GenericHook
 }
 
-// NewConsoleHook creates a ConsoleHook instance
+// NewConsoleHook creates a ConsoleHook instance.
 func NewConsoleHook(level logrus.Level, formatter logrus.Formatter) *ConsoleHook {
 	return &ConsoleHook{
 		GenericHook: &GenericHook{
@@ -22,7 +22,7 @@ func NewConsoleHook(level logrus.Level, formatter logrus.Formatter) *ConsoleHook
 	}
 }
 
-// Fire writes logs to the console
+// Fire writes logs to the console.
 func (hook *ConsoleHook) Fire(entry *logrus.Entry) error {
 	formatted, err := hook.formatEntry(entry)
 	if len(formatted) == 0 {

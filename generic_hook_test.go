@@ -16,7 +16,7 @@ func TestGetLoggingLevels(t *testing.T) {
 		{
 			name:         "disabled",
 			minimumLevel: DisabledLevel,
-			levels:       []logrus.Level{},
+			levels:       nil,
 		},
 		{
 			name:         "panic",
@@ -52,6 +52,11 @@ func TestGetLoggingLevels(t *testing.T) {
 			name:         "trace",
 			minimumLevel: logrus.TraceLevel,
 			levels:       []logrus.Level{logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel, logrus.WarnLevel, logrus.InfoLevel, logrus.DebugLevel, logrus.TraceLevel},
+		},
+		{
+			name:         "over",
+			minimumLevel: 7,
+			levels:       []logrus.Level{logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel, logrus.WarnLevel, logrus.InfoLevel, logrus.DebugLevel, logrus.TraceLevel, 7},
 		},
 	}
 	for _, tt := range tests {
