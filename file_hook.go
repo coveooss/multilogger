@@ -5,20 +5,19 @@ import (
 	"os"
 	"sync"
 
-	"github.com/acarl005/stripansi"
 	"github.com/sirupsen/logrus"
 )
 
 var fileMutex sync.Mutex
 
-// FileHook represents a logger that will send logs (of all levels) to a file
+// FileHook represents a logger that will send logs (of all levels) to a file.
 type FileHook struct {
 	*GenericHook
 	Filename string
 	file     *os.File
 }
 
-// NewFileHook creates a FileHook instance
+// NewFileHook creates a FileHook instance.
 func NewFileHook(filename string, level logrus.Level, formatter logrus.Formatter) *FileHook {
 	fileHook := &FileHook{
 		GenericHook: &GenericHook{
@@ -30,7 +29,7 @@ func NewFileHook(filename string, level logrus.Level, formatter logrus.Formatter
 	return fileHook
 }
 
-// SetFilename modifies the target file name of the hook
+// SetFilename modifies the target file name of the hook.
 func (hook *FileHook) SetFilename(filename string) {
 	fileMutex.Lock()
 	defer fileMutex.Unlock()
@@ -40,10 +39,9 @@ func (hook *FileHook) SetFilename(filename string) {
 	}
 	hook.file = nil
 	hook.Filename = filename
-
 }
 
-// Fire writes logs to the configured file
+// Fire writes logs to the configured file.
 func (hook *FileHook) Fire(entry *logrus.Entry) error {
 	formatted, err := hook.formatEntry(entry)
 	if len(formatted) == 0 {
@@ -51,6 +49,7 @@ func (hook *FileHook) Fire(entry *logrus.Entry) error {
 	}
 
 	fileMutex.Lock()
+	defer fileMutex.Unlock()
 	if hook.file == nil {
 		logFileExists := false
 		if _, err := os.Stat(hook.Filename); err == nil {
@@ -65,9 +64,8 @@ func (hook *FileHook) Fire(entry *logrus.Entry) error {
 		}
 		hook.file.Write([]byte("### Opening log file ###\n\n"))
 	}
-	fileMutex.Unlock()
 
-	if _, err = hook.file.WriteString(stripansi.Strip(string(formatted))); err != nil {
+	if _, err = hook.file.Write(formatted); err != nil {
 		return fmt.Errorf("Unable to print logs to file: %v", err)
 	}
 
