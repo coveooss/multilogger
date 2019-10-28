@@ -2,57 +2,32 @@ package multilogger
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
 )
 
-// GenericHook represents a hook that logs at a given level. This struct must be extended to implement the Fire func.
-type GenericHook struct {
-	Formatter    logrus.Formatter
-	MinimumLevel logrus.Level
+type genericHookI interface {
+	SetFormatter(logrus.Formatter)
+	Formatter() logrus.Formatter
 }
 
-func (hook *GenericHook) formatEntry(entry *logrus.Entry) ([]byte, error) {
-	if hook.MinimumLevel == DisabledLevel {
-		return []byte{}, nil
+type genericHook struct {
+	formatter logrus.Formatter
+}
+
+func (hook *genericHook) formatEntry(entry *logrus.Entry) ([]byte, error) {
+	if hook.formatter == nil {
+		hook.formatter = NewFormatter(true, os.Getenv(FormatFileEnvVar), os.Getenv(FormatEnvVar), DefaultFileFormat)
 	}
-	formatted, err := hook.Formatter.Format(entry)
+	formatted, err := hook.formatter.Format(entry)
 	if err != nil {
-		return []byte{}, fmt.Errorf("Unable to format the given log entry: %v", err)
+		return []byte{}, fmt.Errorf("Unable to format the given log entry: %w", err)
 	}
 	return formatted, nil
 }
 
-// Levels returns the levels that should be handled by the hook.
-func (hook *GenericHook) Levels() []logrus.Level {
-	switch level := hook.MinimumLevel; {
-	case level == DisabledLevel:
-		return nil
-	case level <= logrus.TraceLevel:
-		return logrus.AllLevels[:level+1]
-	default:
-		result := append(make([]logrus.Level, 0, level), logrus.AllLevels...)
-		for i := logrus.TraceLevel; i < level; i++ {
-			result = append(result, i+1)
-		}
-		return result
-	}
-}
-
-// GetColor returns an ANSI color formatting function for every logrus logging level.
-func GetColor(level logrus.Level) func(format string, args ...interface{}) string {
-	switch level {
-	case logrus.DebugLevel, logrus.TraceLevel:
-		return color.HiGreenString
-	case logrus.InfoLevel:
-		return color.HiBlueString
-	case logrus.WarnLevel:
-		return color.YellowString
-	case logrus.ErrorLevel, logrus.FatalLevel:
-		return color.RedString
-	case logrus.PanicLevel:
-		return color.MagentaString
-	}
-	return fmt.Sprintf
-}
+func (hook *genericHook) Levels() []logrus.Level                  { return nil }
+func (hook *genericHook) Fire(entry *logrus.Entry) error          { return fmt.Errorf("Not implemented") }
+func (hook *genericHook) SetFormatter(formatter logrus.Formatter) { hook.formatter = formatter }
+func (hook *genericHook) Formatter() logrus.Formatter             { return hook.formatter }

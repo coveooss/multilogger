@@ -2,36 +2,34 @@ package multilogger
 
 import (
 	"fmt"
-	"os"
+	"io"
 
 	"github.com/sirupsen/logrus"
 )
 
-// ConsoleHook represents a logger that will write logs to the console.
-type ConsoleHook struct {
-	*GenericHook
+type consoleI interface {
+	SetOut(io.Writer)
+	SetStdout(io.Writer)
 }
 
-// NewConsoleHook creates a ConsoleHook instance.
-func NewConsoleHook(level logrus.Level, formatter logrus.Formatter) *ConsoleHook {
-	return &ConsoleHook{
-		GenericHook: &GenericHook{
-			Formatter:    formatter,
-			MinimumLevel: level,
-		},
-	}
+type consoleHook struct {
+	*genericHook
+	out io.Writer
+	log io.Writer
 }
 
-// Fire writes logs to the console.
-func (hook *ConsoleHook) Fire(entry *logrus.Entry) error {
-	formatted, err := hook.formatEntry(entry)
-	if len(formatted) == 0 {
+func (hook *consoleHook) Fire(entry *logrus.Entry) error {
+	if entry.Level == outputLevel {
+		_, err := hook.out.Write([]byte(entry.Message))
 		return err
 	}
-
-	if _, err = os.Stderr.WriteString(string(formatted)); err != nil {
-		return fmt.Errorf("Unable to print logs to file: %v", err)
+	if formatted, err := hook.formatEntry(entry); err != nil {
+		return err
+	} else if _, err = hook.log.Write(formatted); err != nil {
+		return fmt.Errorf("Unable to fire entry: %w", err)
 	}
-
 	return nil
 }
+
+func (hook *consoleHook) SetOut(out io.Writer)    { hook.log = out }
+func (hook *consoleHook) SetStdout(out io.Writer) { hook.out = out }

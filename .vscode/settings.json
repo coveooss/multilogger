@@ -1,10 +1,15 @@
 {
     "cSpell.words": [
+        "Infoln",
+        "Logln",
+        "ghishadow",
+        "godoc",
         "logrus",
         "multilogger"
     ],
     "cSpell.ignoreWords": [
         "acarl",
-        "sirupsen"
+        "sirupsen",
+        "warningln"
     ]
 }
