@@ -40,7 +40,7 @@ type Formatter struct {
 	FormatCaller    func(*runtime.Frame) string
 
 	// ColorMap allows user to define the color attributes associated with the error level.
-	// Attribute names are defined by http://github.com/ghishadow/color
+	// Attribute names are defined by http://github.com/fatih/color
 	ColorMap map[logrus.Level][]multicolor.Attribute
 
 	// LevelName allows user to rename default level name.

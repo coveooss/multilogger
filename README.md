@@ -8,7 +8,6 @@ See [multilogger godoc](https://godoc.org/github.com/coveooss/multilogger) for f
 ## multicolor
 
 There is also a sub package used to handle colors and attributes. It is based on [color](https://github.com/fatih/color) which is an archived project
-but still useful. We based our implementation on [ghishadow](https://github.com/ghishadow/color) fork since it is maintained and have been migrated
-to go module.
+but still useful.
 
 See [multicolor godoc](https://godoc.org/github.com/coveooss/multilogger/color) for full documentation.

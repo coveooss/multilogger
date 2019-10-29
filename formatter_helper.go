@@ -9,7 +9,7 @@ import (
 	"time"
 
 	multicolor "github.com/coveooss/multilogger/color"
-	"github.com/ghishadow/color"
+	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
 )
 

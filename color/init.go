@@ -3,7 +3,7 @@ package multicolor
 import (
 	"strings"
 
-	"github.com/ghishadow/color"
+	"github.com/fatih/color"
 )
 
 func init() {

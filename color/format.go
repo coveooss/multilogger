@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ghishadow/color"
+	"github.com/fatih/color"
 )
 
 // FormatMessage analyses the arguments to determine if Sprintf or Sprintln should be used.

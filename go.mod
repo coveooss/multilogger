@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
-	github.com/ghishadow/color v1.7.0
+	github.com/fatih/color v1.7.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.4 // indirect

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/ghishadow/color"
+	"github.com/fatih/color"
 )
 
 // New returns a color attribute build from supplied attribute names.

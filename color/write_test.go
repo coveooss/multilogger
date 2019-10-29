@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ghishadow/color"
+	"github.com/fatih/color"
 )
 
 func ExampleSetOut() {

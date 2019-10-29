@@ -5,7 +5,7 @@ package multicolor
 import (
 	"fmt"
 
-	"github.com/ghishadow/color"
+	"github.com/fatih/color"
 )
 
 func ExampleNew() {

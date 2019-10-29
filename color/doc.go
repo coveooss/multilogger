@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package multicolor is a complement to github.com/ghishadow/color (which is an active fork github.com/fatih/color).
+Package multicolor is a complement to github.com/fatih/color.
 
 Description
 
@@ -18,7 +18,7 @@ configured as out stream or error stream.
 
 	import (
 	    "github.com/coveooss/multilogger/color"
-	    "github.com/ghishadow/color"
+	    "github.com/fatih/color"
 	)
 
 	var (
@@ -42,7 +42,7 @@ Here is a complete example:
 
 	import (
 	    "github.com/coveooss/multilogger/color"
-	    "github.com/ghishadow/color"
+	    "github.com/fatih/color"
 	)
 
 	var Println = multicolor.Println

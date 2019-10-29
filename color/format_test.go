@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ghishadow/color"
+	"github.com/fatih/color"
 )
 
 func ExampleSprint() {

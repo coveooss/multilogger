@@ -2,12 +2,12 @@
     "cSpell.words": [
         "Infoln",
         "Logln",
-        "ghishadow",
         "godoc",
         "logrus",
         "multilogger"
     ],
     "cSpell.ignoreWords": [
+        "fatih",
         "acarl",
         "sirupsen",
         "warningln"

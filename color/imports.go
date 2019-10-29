@@ -1,8 +1,8 @@
 package multicolor
 
-import "github.com/ghishadow/color"
+import "github.com/fatih/color"
 
-// Imports ghishadow/color functions into the current package.
+// Imports fatih/color functions into the current package.
 var (
 	Black     = color.Black
 	Red       = color.Red

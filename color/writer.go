@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ghishadow/color"
+	"github.com/fatih/color"
 )
 
 // SetOut lets the user redefine the default writer used to print to stdout.

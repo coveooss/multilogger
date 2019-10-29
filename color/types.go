@@ -1,11 +1,11 @@
 package multicolor
 
-import "github.com/ghishadow/color"
+import "github.com/fatih/color"
 
 type (
 	// Attribute is a copy of fatih/Attribute used to generate stringable attributes.
 	Attribute = color.Attribute
-	// Color is imported from ghishadow/color.
+	// Color is imported from fatih/color.
 	Color     = color.Color
 	attribute Attribute
 )
