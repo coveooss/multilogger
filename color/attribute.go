@@ -4,35 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
-
-	"github.com/fatih/color"
 )
-
-// New returns a color attribute build from supplied attribute names.
-// This function will panic if invalid attributes are supplied.
-func New(attributes ...interface{}) *ColorWriter {
-	return &ColorWriter{Color: color.New(Attributes(attributes...)...)}
-}
-
-// TryNew returns a color attribute build from supplied attribute names.
-// If attributes cannot be converted into valid Attribute, an error is returned.
-func TryNew(attributes ...interface{}) (*ColorWriter, error) {
-	attr, err := TryConvertAttributes(attributes...)
-	return &ColorWriter{Color: color.New(attr...)}, err
-}
-
-// Set changes the current output color for all following output to stdout.
-// This function will panic if invalid attributes are supplied.
-func Set(attributes ...interface{}) *ColorWriter {
-	return &ColorWriter{Color: color.Set(Attributes(attributes...)...)}
-}
-
-// TrySet changes the current output color for all following output to stdout.
-// If attributes cannot be converted into valid Attribute, an error is returned.
-func TrySet(attributes ...interface{}) (*ColorWriter, error) {
-	attr, err := TryConvertAttributes(attributes...)
-	return &ColorWriter{Color: color.Set(attr...)}, err
-}
 
 // Attributes convert any object representation to valid color attributes.
 // It will panic if an invalid attribute is provided.
