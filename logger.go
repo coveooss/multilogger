@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"sort"
-	"strconv"
+	"strings"
 	"time"
 
+	"github.com/coveooss/multilogger/errors"
+	"github.com/coveooss/multilogger/reutils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,7 +25,7 @@ const (
 	// DefaultConsoleFormat is the format used by NewConsoleHook if MULTILOGGER_FORMAT is not set.
 	DefaultConsoleFormat = "%module:Italic,Green,SquareBrackets,IgnoreEmpty,Space%%time% %-8level:upper,color% %message:color%"
 	// DefaultFileFormat is the format used by NewFileHook if neither MULTILOGGER_FORMAT or MULTILOGGER_FILE_FORMAT are set.
-	DefaultFileFormat = "[%module,SquareBrackets,IgnoreEmpty,Space%]%time% %-8level:upper% %message%"
+	DefaultFileFormat = "%module:SquareBrackets,IgnoreEmpty,Space%%time% %-8level:upper% %message%"
 )
 
 const (
@@ -33,9 +36,13 @@ const (
 // Logger represents a logger that logs to both a file and the console at different (configurable) levels.
 type Logger struct {
 	*logrus.Entry
-	hooks      map[string]*leveledHook
-	level      logrus.Level
 	PrintLevel logrus.Level
+	Catcher    bool
+
+	hooks     map[string]*leveledHook
+	level     logrus.Level
+	remaining string
+	errors    errors.Array // Used to cumultate errors in the logging process
 }
 
 type leveledHook struct {
@@ -49,11 +56,11 @@ func New(module string, hooks ...*Hook) *Logger {
 	if len(hooks) == 0 {
 		hooks = []*Hook{NewConsoleHook("", logrus.WarnLevel)}
 	}
-	logger := &Logger{Entry: logrus.New().WithField(moduleFieldName, module)}
-	if caller := os.Getenv(CallerEnvVar); caller != "" {
-		caller, err := strconv.ParseBool(caller)
-		logger.SetReportCaller(err != nil || caller)
+	logger := &Logger{
+		Entry:   logrus.New().WithField(moduleFieldName, module),
+		Catcher: true,
 	}
+	logger.SetReportCaller(ParseBool(os.Getenv(CallerEnvVar)))
 	logger.Logger.Out = ioutil.Discard      // Discard all logs to the main logger
 	logger.Logger.Level = DisabledLevel - 1 // Always log at the highest possible level. Hooks will decide if the log goes through or not
 	logger.AddHooks(hooks...)
@@ -67,10 +74,19 @@ func (logger *Logger) Copy(module string) *Logger {
 	for key, hook := range logger.hooks {
 		hooks = append(hooks, NewHook(key, hook.level, hook.hook.inner))
 	}
-	newLogger := New(module, hooks...)
+	newLogger := *logger
+	newLogger.hooks = nil
+	newLogger.AddHooks(hooks...)
 	newLogger.Entry = logger.Entry.WithField(moduleFieldName, module)
-	newLogger.PrintLevel = logger.PrintLevel
-	return newLogger
+	return &newLogger
+}
+
+// Child returns a new logger with the same module and properties as its parent.
+func (logger *Logger) Child(child string) *Logger {
+	if module := logger.GetModule(); module != "" {
+		return logger.Copy(fmt.Sprintf("%s:%s", module, child))
+	}
+	return logger.Copy(child)
 }
 
 // WithTime return a new logger with a fixed time for log entry (useful for testing).
@@ -170,6 +186,10 @@ func (logger *Logger) AddHooks(hooks ...*Hook) *Logger {
 	}
 	for _, hook := range hooks {
 		logger.hooks[hook.name] = &leveledHook{hook.level, hook}
+		if sl, ok := hook.inner.(setLoggerI); ok {
+			// If the hook supports to attach the current logger to it, we set it
+			sl.SetLogger(logger)
+		}
 	}
 	return logger.refreshLoggers()
 }
@@ -227,7 +247,15 @@ func (logger *Logger) ListHooks() []string {
 func (logger *Logger) refreshLoggers() *Logger {
 	logger.Logger.Hooks = make(logrus.LevelHooks)
 	var level logrus.Level
-	for _, hook := range logger.hooks {
+
+	names := make([]string, 0, len(logger.hooks))
+	for key := range logger.hooks {
+		names = append(names, key)
+	}
+	sort.Strings(names)
+
+	for _, key := range names {
+		hook := logger.hooks[key]
 		logger.Logger.Hooks.Add(hook.hook)
 		if hook.level > level {
 			level = hook.level
@@ -244,9 +272,141 @@ func (logger *Logger) getHook(name string) *leveledHook {
 	return logger.hooks[name]
 }
 
+// AddError let functions to add error to the current logger indicating that something went
+// wrong in the logging process.
+func (logger *Logger) AddError(err error) {
+	if err != nil {
+		logger.errors = append(logger.errors, err)
+	}
+}
+
+// GetError returns the current error state of the logging process.
+func (logger *Logger) GetError() error { return logger.errors.AsError() }
+
+// ClearError cleans up the current error state of the logging process.
+// It also returns the current error state.
+func (logger *Logger) ClearError() error {
+	current := logger.errors.AsError()
+	logger.errors = nil
+	return current
+}
+
 // Writer is the implementation of io.Writer. You should not call directly this function.
 // The function will fail if called directly on a stream that have not been configured as out stream.
-func (logger *Logger) Write(p []byte) (n int, err error) {
+func (logger *Logger) oldWrite(p []byte) (n int, err error) {
 	logger.Print(string(p))
 	return len(p), nil
 }
+
+// Close implements io.Closer
+func (logger *Logger) Close() error {
+	if logger.remaining != "" {
+		_, err := logger.Write(nil)
+		return err
+	}
+	return nil
+}
+
+// This methods intercepts every message written to stream if Catcher is set and determines if a logging
+// function should be used.
+func (logger *Logger) Write(writeBuffer []byte) (int, error) {
+	if !logger.Catcher {
+		if err := logger.printLines(string(writeBuffer)); err != nil {
+			return 0, err
+		}
+		return len(writeBuffer), nil
+	}
+
+	var (
+		buffer      string
+		resultCount int
+	)
+
+	if logger.remaining != "" {
+		resultCount -= len(logger.remaining)
+		buffer = logger.remaining + string(writeBuffer)
+		logger.remaining = ""
+	} else {
+		buffer = string(writeBuffer)
+	}
+
+	if writeBuffer != nil {
+		lastCR := strings.LastIndex(buffer, "\n")
+		logger.remaining = buffer[lastCR+1:]
+		buffer = buffer[:lastCR+1]
+		resultCount += len(logger.remaining)
+	}
+
+	for {
+		searchBuffer, extraChar := buffer, 0
+		if writeBuffer == nil {
+			searchBuffer += "\n"
+			extraChar = 1
+		}
+		matches, _ := reutils.MultiMatch(searchBuffer, logMessages...)
+		if len(matches) == 0 {
+			break
+		}
+
+		if before := matches["before"]; before != "" {
+			if err := logger.printLines(before); err != nil {
+				return 0, err
+			}
+			count := len(before)
+			resultCount += count
+			buffer = buffer[count:]
+		}
+
+		level := ParseLogLevel(matches["level"])
+		message := matches["message"]
+		if prefix := matches["prefix"]; prefix != "" {
+			message = fmt.Sprintf("%s %s %s", prefix, level, message)
+		}
+		logger.Log(level, message)
+		if err := logger.GetError(); err != nil {
+			return 0, err
+		}
+		toRemove := len(matches["toRemove"]) - extraChar
+		buffer = buffer[toRemove:]
+		resultCount += toRemove
+	}
+
+	if err := logger.printLines(buffer); err != nil {
+		return 0, err
+	}
+	return resultCount + len(buffer), nil
+}
+
+func (logger *Logger) printLines(s string) error {
+	lines := strings.Split(s, "\n")
+	count := len(lines)
+	for i, line := range lines {
+		if logger.PrintLevel == outputLevel && i != count-1 {
+			logger.Println(line)
+		} else if i != count-1 || line != "" {
+			logger.Print(line)
+		}
+		if err := logger.GetError(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func init() {
+	choices := fmt.Sprintf(`\[(?P<level>warn|%s)\]`, strings.Join(AcceptedLevels()[1:], "|"))
+	expressions := []string{
+		// https://regex101.com/r/jhhPLS/2
+		`${choices}[[:blank:]]*{\s*${message}\s*}`,
+		`[[:blank:]]*(?P<prefix>[^\n]*?)[[:blank:]]*${choices}[[:blank:]]*${message}[[:blank:]]*\n`,
+	}
+
+	for _, expr := range expressions {
+		expr = fmt.Sprintf(`(?is)(?P<before>.*?)(?P<toRemove>%s)`, expr)
+		expr = strings.Replace(expr, "${choices}", choices, -1)
+		expr = strings.Replace(expr, "${message}", `(?P<message>.*?)`, -1)
+		logMessages = append(logMessages, regexp.MustCompile(expr))
+	}
+}
+
+var logMessages []*regexp.Regexp

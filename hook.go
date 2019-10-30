@@ -29,7 +29,7 @@ func NewConsoleHook(name string, level interface{}, format ...interface{}) *Hook
 	return NewHook(name, level, &consoleHook{
 		out:         os.Stdout,
 		log:         logrus.StandardLogger().Out,
-		genericHook: &genericHook{getFormatter(true, format...)},
+		genericHook: &genericHook{formatter: getFormatter(true, format...)},
 	})
 }
 
@@ -41,7 +41,7 @@ func NewFileHook(filename string, level interface{}, format ...interface{}) *Hoo
 		format = append(format, NewFormatter(false, os.Getenv(FormatFileEnvVar), os.Getenv(FormatEnvVar), DefaultFileFormat))
 	}
 	return NewHook(filename, level, &fileHook{
-		genericHook: &genericHook{getFormatter(false, format...)},
+		genericHook: &genericHook{formatter: getFormatter(false, format...)},
 		filename:    filename,
 		addHeader:   true,
 	})

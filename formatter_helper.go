@@ -6,9 +6,10 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	multicolor "github.com/coveooss/multilogger/color"
+	"github.com/coveooss/multilogger/errors"
+	"github.com/coveooss/multilogger/reutils"
 	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
 )
@@ -61,21 +62,21 @@ func (f *Formatter) doFormat(entry *logrus.Entry) (string, error) {
 }
 
 func (f *Formatter) presetFormatString() error {
-	var errors []string
+	var errors errors.Array
 	f.replacer = &replacer{Formatter: f}
 	r := f.replacer
 	r.keyReplacer = r.newField(true)
 	r.fieldReplacer = r.newField(false)
 	r.format = reFormat.ReplaceAllStringFunc(f.format, func(match string) (result string) {
-		matches := reFormat.FindStringSubmatch(match)
+		matches, _ := reutils.MultiMatch(match, reFormat)
 
 		result = replacementToken
 		fieldReplacer := r.newField(false)
-		if field := matches[reField]; field != "" {
+		if field := matches["field"]; field != "" {
 			fieldReplacer.tt = fieldTokenType
 			fieldReplacer.fieldName = field
 			f.replacer.fields = append(r.fields, fieldReplacer)
-		} else if token := matches[reToken]; token != "" {
+		} else if token := matches["token"]; token != "" {
 			fieldReplacer.tt = reverseTokens[token]
 			if fieldReplacer.tt == unsetTokenType {
 				switch token {
@@ -95,15 +96,15 @@ func (f *Formatter) presetFormatString() error {
 			result = ""
 		}
 
-		if limit, err := strconv.ParseUint(matches[reLimit], 10, 0); err == nil {
+		if limit, err := strconv.ParseUint(matches["limit"], 10, 0); err == nil {
 			limit := uint(limit)
 			fieldReplacer.limit = &limit
 		}
-		if width, err := strconv.Atoi(matches[reWidth]); err == nil {
+		if width, err := strconv.Atoi(matches["width"]); err == nil {
 			fieldReplacer.width = &width
 		}
 
-		attributes := strings.Split(matches[reAttributes], ",")
+		attributes := strings.Split(matches["attributes"], ",")
 		colors := make([]interface{}, 0, len(attributes))
 		for _, attribute := range attributes {
 			attribute = strings.ToLower(strings.TrimSpace(attribute))
@@ -144,7 +145,7 @@ func (f *Formatter) presetFormatString() error {
 		if len(colors) > 0 {
 			var err error
 			if fieldReplacer.attributes, err = multicolor.TryConvertAttributes(colors); err != nil {
-				errors = append(errors, err.Error())
+				errors = append(errors, err)
 			}
 			if fieldReplacer.tt == unsetTokenType {
 				result = color.New(fieldReplacer.attributes...).Sprint()
@@ -169,25 +170,13 @@ func (f *Formatter) presetFormatString() error {
 		r.fields[index].position = uint(begin)
 	}
 
-	if len(errors) > 0 {
-		return fmt.Errorf(strings.Join(errors, "\n"))
-	}
-	return nil
+	return errors.AsError()
 }
 
 // https://regex101.com/r/SPI8hT/1
 var (
 	reFormat = regexp.MustCompile(`%(?:(?P<width>-?\d+)?(?:\.(?P<limit>\d+))?(?:(?P<token>(?:time|(?:global)?delay|delta|message|msg|level|lvl|module|func|file|line|caller|fields|key|field))|(?P<field>\w+)))?(?i)(?::(?P<attributes>(?:[,+\-\s]*(?:color|upper|lower|title|none|key|ignore(?:empty)?|space|parens|parenthesis|(?:square|curly|round|angle)(?:brackets)?|(?:bg)?(?:hi)?(?:black|red|green|yellow|blue|magenta|cyan|white)|(?:bold|faint|italic|underline|blinkslow|blinkrapid|reversevideo|concealed|crossedout|reset))\s*)+))?%`)
 	reset    = string([]byte{27, 91, 48, 109})
-)
-
-const (
-	reAll = iota
-	reWidth
-	reLimit
-	reToken
-	reField
-	reAttributes
 )
 
 type transformType uint8
@@ -243,34 +232,3 @@ func init() {
 var reverseTokens map[string]tokenType
 
 //go:generate stringer -type=tokenType -trimprefix token -output formatter_generated.go
-
-// FormatDuration returns a string to represent the duration.
-func FormatDuration(duration time.Duration) string {
-	const day = 24 * time.Hour
-	const week = 7 * day
-	const month = 30 * day
-	const year = 365 * day
-	duration = duration.Round(time.Microsecond)
-	result := ""
-	if duration >= time.Hour {
-		duration = duration.Round(time.Second / 10)
-	}
-	if duration > year {
-		result = fmt.Sprintf("%dy", duration/year)
-		duration = duration % year
-	}
-	if duration > 45*day {
-		result = fmt.Sprintf("%s%dmo", result, duration/month)
-		duration = duration % month
-	}
-	if duration >= 2*week {
-		duration = duration.Round(time.Second)
-		result = fmt.Sprintf("%s%dw", result, duration/week)
-		duration = duration % week
-	}
-	if duration > day {
-		result = fmt.Sprintf("%s%dd", result, duration/day)
-		duration = duration % day
-	}
-	return fmt.Sprintf("%s%s", result, duration)
-}

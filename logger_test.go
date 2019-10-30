@@ -1,9 +1,10 @@
 package multilogger
 
 import (
+	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -20,8 +21,7 @@ func getTestLogger(name string, level ...interface{}) *Logger {
 
 	color := true
 	// Unset environment variable unless MULTILOGGER_TEST_KEEP_ENV is set to a true value
-	keep := os.Getenv("MULTILOGGER_TEST_KEEP_ENV")
-	if result, err := strconv.ParseBool(keep); keep == "" || err == nil && !result {
+	if !ParseBool(os.Getenv("MULTILOGGER_TEST_KEEP_ENV")) {
 		os.Unsetenv(FormatEnvVar)
 		os.Unsetenv(FormatFileEnvVar)
 		os.Unsetenv(CallerEnvVar)
@@ -66,6 +66,17 @@ func ExampleLogger_Copy() {
 	// [original] 2018/06/24 12:34:56.789 INFO     Log from original
 	// [copy] 2018/06/24 12:34:56.789 TRACE    Log from copy
 	// 2018/06/24 12:34:56.789 DEBUG    I have no module
+}
+
+func ExampleLogger_Child() {
+	log := getTestLogger("original", logrus.TraceLevel)
+	log.Info("Log from original")
+	log.Child("1").Trace("Log from first child")
+	log.Child("2").Trace("Log from second child")
+	// Output:
+	// [original] 2018/06/24 12:34:56.789 INFO     Log from original
+	// [original:1] 2018/06/24 12:34:56.789 TRACE    Log from first child
+	// [original:2] 2018/06/24 12:34:56.789 TRACE    Log from second child
 }
 
 func ExampleLogger_WithTime() {
@@ -136,6 +147,33 @@ func ExampleLogger_AddConsole() {
 	// Output:
 	// [json] 2018/06/24 12:34:56.789 WARNING  New JSON log
 	// {"level":"warning","module-field":"json","msg":"New JSON log","time":"2018-06-24T12:34:56Z"}
+}
+
+func ExampleLogger_AddFile() {
+	log := getTestLogger("file")
+
+	var logfile string
+	if temp, err := ioutil.TempFile("", "example"); err != nil {
+		log.Fatal(err)
+	} else {
+		logfile = temp.Name()
+		defer os.Remove(logfile)
+	}
+
+	log.AddFile(logfile, logrus.TraceLevel)
+	log.Info("This is information")
+	log.Warning("This is a warning")
+
+	content, _ := ioutil.ReadFile(logfile)
+	fmt.Println("Content of the log file is:")
+	fmt.Println(string(content))
+	// Output:
+	// [file] 2018/06/24 12:34:56.789 WARNING  This is a warning
+	// Content of the log file is:
+	//
+	// # 2018/06/24 12:34:56.789
+	// [file] 2018/06/24 12:34:56.789 INFO     This is information
+	// [file] 2018/06/24 12:34:56.789 WARNING  This is a warning
 }
 
 func ExampleLogger_AddConsole_overwrite() {
