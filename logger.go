@@ -179,6 +179,16 @@ func (logger *Logger) AddHook(name string, level interface{}, hook logrus.Hook) 
 	return logger.AddHooks(NewHook(name, level, hook))
 }
 
+// TryAddHook adds a hook to the hook collection and associated it with a name and a level.
+// Can also be used to replace an existing hook.
+func (logger *Logger) TryAddHook(name string, level interface{}, hook logrus.Hook) (*Logger, error) {
+	level, err := TryParseLogLevel(level)
+	if err != nil {
+		return nil, err
+	}
+	return logger.AddHook(name, level, hook), nil
+}
+
 // AddHooks adds a collection of hook wrapper as hook to the current logger.
 func (logger *Logger) AddHooks(hooks ...*Hook) *Logger {
 	if logger.hooks == nil {
@@ -229,7 +239,8 @@ func (logger *Logger) GetHookLevel(name string, level interface{}) logrus.Level 
 // SetHookLevel set a new log level for a registered hook.
 func (logger *Logger) SetHookLevel(name string, level interface{}) error {
 	if hook := logger.Hook(name); hook != nil {
-		logger.AddHook(hook.name, level, hook.inner)
+		_, err := logger.TryAddHook(hook.name, level, hook.inner)
+		return err
 	}
 	return fmt.Errorf("Hook not found %s", name)
 }
