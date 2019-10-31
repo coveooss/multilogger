@@ -20,11 +20,13 @@ func TestMultiMatch(t *testing.T) {
 		match       int
 	}{
 		{"empty", "", nil, nil, -1},
-		{"single", "Hello", []*regexp.Regexp{
-			regexp.MustCompile(`H`),
-		}, map[string]string{
-			"": "H",
-		}, 0},
+		{
+			"single", "Hello", []*regexp.Regexp{
+				regexp.MustCompile(`H`),
+			}, map[string]string{
+				"": "H",
+			}, 0,
+		},
 		{
 			"hello", "Hello world!", []*regexp.Regexp{
 				regexp.MustCompile(`\w+`),

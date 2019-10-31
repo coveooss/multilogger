@@ -81,7 +81,7 @@ func (logger *Logger) Copy(module string) *Logger {
 	return &newLogger
 }
 
-// Child returns a new logger with the same module and properties as its parent.
+// Child clones the logger, appending the child's name to the parent's module name.
 func (logger *Logger) Child(child string) *Logger {
 	if module := logger.GetModule(); module != "" {
 		return logger.Copy(fmt.Sprintf("%s:%s", module, child))
@@ -259,13 +259,7 @@ func (logger *Logger) refreshLoggers() *Logger {
 	logger.Logger.Hooks = make(logrus.LevelHooks)
 	var level logrus.Level
 
-	names := make([]string, 0, len(logger.hooks))
-	for key := range logger.hooks {
-		names = append(names, key)
-	}
-	sort.Strings(names)
-
-	for _, key := range names {
+	for _, key := range logger.ListHooks() {
 		hook := logger.hooks[key]
 		logger.Logger.Hooks.Add(hook.hook)
 		if hook.level > level {

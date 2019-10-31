@@ -7,23 +7,23 @@ import (
 	"github.com/fatih/color"
 )
 
-// Raise issues a panic with a formated message representing a managed error
+// Raise issues a panic with a formated message representing a managed error.
 func Raise(format string, args ...interface{}) {
 	panic(Managed(fmt.Sprintf(format, args...)))
 }
 
-// Printf print a message to the stderr in red
+// Printf print a message to the stderr in red.
 func Printf(format string, args ...interface{}) {
 	Print(fmt.Errorf(format, args...))
 }
 
-// Print print error to the stderr in red
+// Print print error to the stderr in red.
 func Print(err error) {
 	fmt.Fprintln(color.Error, color.RedString(fmt.Sprintf("%v", err)))
 }
 
-// Must traps errors and return the remaining results to the caller
-// If there is an error, a panic is issued
+// Must traps errors and returns the remaining results to the caller.
+// If there is an error, a panic is issued.
 func Must(result ...interface{}) interface{} {
 	if len(result) == 0 {
 		return nil
@@ -45,8 +45,8 @@ func Must(result ...interface{}) interface{} {
 	}
 }
 
-// Trap catch any panic exception, and convert it to error
-// It must be called with current error state and recover() as argument
+// Trap catches any panic exception, and converts it to error.
+// It must be called with current error state and recover() as argument.
 func Trap(sourceErr error, recovered interface{}) (err error) {
 	err = sourceErr
 	var trap error
@@ -66,7 +66,7 @@ func Trap(sourceErr error, recovered interface{}) (err error) {
 	return
 }
 
-// TemplateNotFoundError is returned when a template does not exist
+// TemplateNotFoundError is returned when a template does not exist.
 type TemplateNotFoundError struct {
 	name string
 }
@@ -75,7 +75,7 @@ func (e TemplateNotFoundError) Error() string {
 	return fmt.Sprintf("Template %s not found", e.name)
 }
 
-// Array represent an array of error
+// Array represent an array of error.
 type Array []error
 
 func (errors Array) Error() string {
@@ -88,7 +88,7 @@ func (errors Array) Error() string {
 	return strings.Join(errorsStr, "\n")
 }
 
-// AsError returns nil if there is no error in the array
+// AsError returns nil if there is no error in the array.
 func (errors Array) AsError() error {
 	switch len(errors) {
 	case 0:
@@ -99,7 +99,7 @@ func (errors Array) AsError() error {
 	return errors
 }
 
-// Managed indicates an error that is properly handled (no need to print out stack)
+// Managed indicates an error that is properly handled (no need to print out stack).
 type Managed string
 
 func (err Managed) Error() string {

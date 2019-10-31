@@ -5,24 +5,24 @@ import (
 	"sync"
 )
 
-// MultiMatch returns a map of matching elements from a list of regular expressions (returning the first matching element)
+// MultiMatch returns a map of matching elements from a list of regular expressions (returning the first matching element).
 func MultiMatch(s string, expressions ...*regexp.Regexp) (map[string]string, int) {
-	for i, re := range expressions {
+	for exprIndex, re := range expressions {
 		if matches := re.FindStringSubmatch(s); len(matches) != 0 {
 			results := make(map[string]string, len(matches))
 			results[""] = matches[0]
-			for i, key := range re.SubexpNames() {
+			for subIndex, key := range re.SubexpNames() {
 				if key != "" {
-					results[key] = matches[i]
+					results[key] = matches[subIndex]
 				}
 			}
-			return results, i
+			return results, exprIndex
 		}
 	}
 	return nil, -1
 }
 
-// NewRegexGroup cache compiled regex to avoid multiple interpretation of the same regex
+// NewRegexGroup cache compiled regex to avoid multiple interpretation of the same regex.
 func NewRegexGroup(key string, definitions ...string) (result []*regexp.Regexp, err error) {
 	result = make([]*regexp.Regexp, len(definitions))
 	for i := range definitions {
