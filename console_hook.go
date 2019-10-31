@@ -1,7 +1,6 @@
 package multilogger
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/sirupsen/logrus"
@@ -18,17 +17,18 @@ type consoleHook struct {
 	log io.Writer
 }
 
-func (hook *consoleHook) Fire(entry *logrus.Entry) error {
-	if entry.Level == outputLevel {
-		_, err := hook.out.Write([]byte(entry.Message))
-		return err
-	}
-	if formatted, err := hook.formatEntry(entry); err != nil {
-		return err
-	} else if _, err = hook.log.Write(formatted); err != nil {
-		return fmt.Errorf("Unable to fire entry: %w", err)
-	}
-	return nil
+func (hook *consoleHook) Fire(entry *logrus.Entry) (err error) {
+	return hook.fire(entry, func() error {
+		const name = "ConsoleHook"
+		if entry.Level == outputLevel {
+			return hook.printf(name, hook.out, entry.Message)
+		}
+		var formatted string
+		if formatted, err = hook.formatEntry(name, entry); err != nil {
+			return err
+		}
+		return hook.printf(name, hook.log, string(formatted))
+	})
 }
 
 func (hook *consoleHook) SetOut(out io.Writer)    { hook.log = out }

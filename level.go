@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/coveooss/multilogger/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -33,11 +34,7 @@ func AcceptedLevelsString() string {
 // ParseLogLevel converts a string or number into a logging level.
 // It panics if the supplied valid cannot be converted into a valid logrus Level.
 func ParseLogLevel(level interface{}) logrus.Level {
-	result, err := TryParseLogLevel(level)
-	if err != nil {
-		panic(err)
-	}
-	return result
+	return errors.Must(TryParseLogLevel(level)).(logrus.Level)
 }
 
 // TryParseLogLevel converts a string or number into a logging level.
