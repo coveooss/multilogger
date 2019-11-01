@@ -17,6 +17,17 @@ func init() {
 		if strings.HasPrefix(name, "fg") {
 			colorNames[name[2:]] = color.Attribute(i)
 		}
+		switch name {
+		case "reversevideo":
+			colorNames["reverse"] = color.Attribute(i)
+		case "blinkslow":
+			colorNames["blink"] = color.Attribute(i)
+		case "concealed":
+			colorNames["secret"] = color.Attribute(i)
+		case "crossedout":
+			colorNames["strikethrough"] = color.Attribute(i)
+			colorNames["strike"] = color.Attribute(i)
+		}
 	}
 }
 

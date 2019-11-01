@@ -41,5 +41,9 @@ func TryConvertAttributes(attributes ...interface{}) ([]Attribute, error) {
 			}
 		}
 	}
+	if len(result) == 0 {
+		// If no color attribute as been provider, we consider it as an error
+		errors = append(errors, fmt.Errorf("No attribute specified"))
+	}
 	return result, errors.AsError()
 }
