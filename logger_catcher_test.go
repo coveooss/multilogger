@@ -73,9 +73,7 @@ func TestLogger_Write(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var output, logs bytes.Buffer
-			log := getTestLogger(tt.name, "Trace")
-			log.Hook("").SetOut(&logs)
-			log.Hook("").SetStdout(&output)
+			log := getTestLogger(tt.name, "Trace").SetOut(&logs).SetStdout(&output)
 
 			for i, p := range tt.sequence {
 				i++
@@ -110,9 +108,7 @@ func TestLogCatcher_WriteWithError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			log := getTestLogger(tt.name, "trace")
-			log.Hook("").SetOut(&buggyWriter{tt.err})
-			log.Hook("").SetStdout(&buggyWriter{tt.err})
+			log := getTestLogger(tt.name, "trace").SetAllOutputs(&buggyWriter{tt.err})
 
 			gotResultCount, err := log.Write([]byte(tt.text))
 			if err == nil {

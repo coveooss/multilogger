@@ -22,14 +22,11 @@ const (
 	FormatEnvVar = "MULTILOGGER_FORMAT"
 	// FormatFileEnvVar is an environment variable that allows users to set the default format used for log entry using a file logger.
 	FormatFileEnvVar = "MULTILOGGER_FILE_FORMAT"
-	// DefaultConsoleFormat is the format used by NewConsoleHook if MULTILOGGER_FORMAT is not set.
-	DefaultConsoleFormat = "%module:Italic,Green,SquareBrackets,IgnoreEmpty,Space%%time% %-8level:upper,color% %message:color%"
 	// DefaultFileFormat is the format used by NewFileHook if neither MULTILOGGER_FORMAT or MULTILOGGER_FILE_FORMAT are set.
 	DefaultFileFormat = "%module:SquareBrackets,IgnoreEmpty,Space%%time% %-8level:upper% %message%"
 )
 
 const (
-	consoleHookName = "console-hook"
 	moduleFieldName = "module-field"
 )
 
@@ -50,6 +47,14 @@ type leveledHook struct {
 	hook  *Hook
 }
 
+func createInnerLogger(reportCaller bool, data logrus.Fields) *logrus.Entry {
+	logger := logrus.New()
+	logger.ReportCaller = reportCaller
+	logger.Out = ioutil.Discard      // Discard all logs to the main logger
+	logger.Level = DisabledLevel - 1 // Always log at the highest possible level. Hooks will decide if the log goes through or not
+	return logger.WithFields(data)
+}
+
 // New creates a new Multilogger instance.
 // If no hook is provided, it defaults to standard console logger at warning log level.
 func New(module string, hooks ...*Hook) *Logger {
@@ -57,28 +62,42 @@ func New(module string, hooks ...*Hook) *Logger {
 		hooks = []*Hook{NewConsoleHook("", logrus.WarnLevel)}
 	}
 	logger := &Logger{
-		Entry:   logrus.New().WithField(moduleFieldName, module),
+		Entry:   createInnerLogger(ParseBool(os.Getenv(CallerEnvVar)), logrus.Fields{moduleFieldName: module}),
 		Catcher: true,
 	}
-	logger.SetReportCaller(ParseBool(os.Getenv(CallerEnvVar)))
-	logger.Logger.Out = ioutil.Discard      // Discard all logs to the main logger
-	logger.Logger.Level = DisabledLevel - 1 // Always log at the highest possible level. Hooks will decide if the log goes through or not
 	logger.AddHooks(hooks...)
 	logger.PrintLevel = outputLevel
 	return logger
 }
 
 // Copy returns a new logger with the same hooks but a different module name.
-func (logger *Logger) Copy(module string) *Logger {
+// module is optional, if not supplied, the original module name will copied.
+// If many name are supplied, they are joined with a - separator.
+func (logger *Logger) Copy(module ...string) *Logger {
+	moduleName := strings.Join(module, "-")
+	if len(module) == 0 {
+		// The function has been called without argument, so we copy the original module name
+		moduleName = logger.GetModule()
+	}
+
 	var hooks []*Hook
 	for key, hook := range logger.hooks {
-		hooks = append(hooks, NewHook(key, hook.level, hook.hook.inner))
+		inner := hook.hook.inner
+		if cloneable, ok := hook.hook.inner.(cloneable); ok {
+			// We duplicate the inner hook if it is cloneable
+			inner = cloneable.clone()
+		}
+		hooks = append(hooks, NewHook(key, hook.level, inner))
 	}
-	newLogger := *logger
-	newLogger.hooks = nil
-	newLogger.AddHooks(hooks...)
-	newLogger.Entry = logger.Entry.WithField(moduleFieldName, module)
-	return &newLogger
+
+	return (&Logger{
+		Entry:      createInnerLogger(logger.Logger.ReportCaller, logger.Entry.Data).WithTime(logger.Time).WithContext(logger.Context).WithField(moduleFieldName, moduleName),
+		PrintLevel: logger.PrintLevel,
+		Catcher:    logger.Catcher,
+		level:      logger.level,
+		remaining:  logger.remaining,
+		errors:     logger.errors,
+	}).AddHooks(hooks...)
 }
 
 // Child clones the logger, appending the child's name to the parent's module name.
@@ -157,6 +176,12 @@ func (logger *Logger) GetModule() string {
 	return logger.Data[moduleFieldName].(string)
 }
 
+// SetModule sets the module name associated to the current logger.
+func (logger *Logger) SetModule(module string) *Logger {
+	logger.Data[moduleFieldName] = module
+	return logger
+}
+
 // IsLevelEnabled checks if the log level of the logger is greater than the level param
 func (logger *Logger) IsLevelEnabled(level logrus.Level) bool {
 	return logger.GetLevel() >= level
@@ -229,7 +254,7 @@ func (logger *Logger) Hook(name string) *Hook {
 }
 
 // GetHookLevel returns the logging level associated with a specific logger.
-func (logger *Logger) GetHookLevel(name string, level interface{}) logrus.Level {
+func (logger *Logger) GetHookLevel(name string) logrus.Level {
 	if hook := logger.getHook(name); hook != nil {
 		return hook.level
 	}
@@ -294,13 +319,6 @@ func (logger *Logger) ClearError() error {
 	current := logger.errors.AsError()
 	logger.errors = nil
 	return current
-}
-
-// Writer is the implementation of io.Writer. You should not call directly this function.
-// The function will fail if called directly on a stream that have not been configured as out stream.
-func (logger *Logger) oldWrite(p []byte) (n int, err error) {
-	logger.Print(string(p))
-	return len(p), nil
 }
 
 // Close implements io.Closer

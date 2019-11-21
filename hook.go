@@ -8,6 +8,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type cloneable interface {
+	clone() logrus.Hook
+}
+
 // NewHook generates a named hook wrapper that is able the handle its own logging level.
 //
 // level: Accept any kind of object, but must be resolvable into a valid logrus level name.
@@ -162,4 +166,9 @@ func (hook *Hook) SetOut(out io.Writer) *Hook {
 func (hook *Hook) SetStdout(out io.Writer) *Hook {
 	hook.inner.(consoleI).SetStdout(out)
 	return hook
+}
+
+// GetInnerHook returns the inner hook actually used by the leveled hook.
+func (hook *Hook) GetInnerHook() logrus.Hook {
+	return hook.inner
 }
