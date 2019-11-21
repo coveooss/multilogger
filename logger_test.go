@@ -62,10 +62,12 @@ func ExampleLogger_Copy() {
 	log.Info("Log from original")
 	log.Copy("copy").Trace("Log from copy")
 	log.Copy("").Debug("I have no module")
+	log.Copy().Debug("I have the same module as the original")
 	// Output:
 	// [original] 2018/06/24 12:34:56.789 INFO     Log from original
 	// [copy] 2018/06/24 12:34:56.789 TRACE    Log from copy
 	// 2018/06/24 12:34:56.789 DEBUG    I have no module
+	// [original] 2018/06/24 12:34:56.789 DEBUG    I have the same module as the original
 }
 
 func ExampleLogger_Child() {
@@ -109,7 +111,7 @@ func ExampleLogger_WithField() {
 	log := getTestLogger("field", "Trace")
 
 	// We set the format of the log to include fields
-	log.Hook("").SetFormat("%module:square% %time% %level:upper% %message% %fields%.")
+	log.SetFormat("%module:square% %time% %level:upper% %message% %fields%.")
 
 	// We create a new logger with additional context
 	log2 := log.WithField("hello", "world!").WithField("pi", math.Pi)
@@ -124,7 +126,7 @@ func ExampleLogger_WithFields() {
 	log := getTestLogger("field", "Trace")
 
 	// We set the format of the log to include fields
-	log.Hook("").SetFormat("%module:square% %time% %level:upper% %message% %fields%.")
+	log.SetFormat("%module:square% %time% %level:upper% %message% %fields%.")
 
 	// We create a new logger with additional context
 	log2 := log.WithFields(logrus.Fields{

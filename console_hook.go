@@ -17,6 +17,16 @@ type consoleHook struct {
 	log io.Writer
 }
 
+func (hook *consoleHook) clone() logrus.Hook {
+	// Duplicate the console hook to ensure that the copy
+	// has its own attributes when the object is copied.
+	return &consoleHook{
+		genericHook: hook.genericHook,
+		out:         hook.out,
+		log:         hook.log,
+	}
+}
+
 func (hook *consoleHook) Fire(entry *logrus.Entry) (err error) {
 	return hook.fire(entry, func() error {
 		const name = "ConsoleHook"
