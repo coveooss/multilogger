@@ -3,6 +3,7 @@ package multilogger
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -50,6 +51,14 @@ type leveledHook struct {
 	hook  *Hook
 }
 
+func createInnerLogger(module string, reportCaller bool) *logrus.Entry {
+	logger := logrus.New().WithField(moduleFieldName, module)
+	logger.Logger.ReportCaller = reportCaller
+	logger.Logger.Out = ioutil.Discard      // Discard all logs to the main logger
+	logger.Logger.Level = DisabledLevel - 1 // Always log at the highest possible level. Hooks will decide if the log goes through or not
+	return logger
+}
+
 // New creates a new Multilogger instance.
 // If no hook is provided, it defaults to standard console logger at warning log level.
 func New(module string, hooks ...*Hook) *Logger {
@@ -57,12 +66,9 @@ func New(module string, hooks ...*Hook) *Logger {
 		hooks = []*Hook{NewConsoleHook("", logrus.WarnLevel)}
 	}
 	logger := &Logger{
-		Entry:   logrus.New().WithField(moduleFieldName, module),
+		Entry:   createInnerLogger(module, ParseBool(os.Getenv(CallerEnvVar))),
 		Catcher: true,
 	}
-	logger.SetReportCaller(ParseBool(os.Getenv(CallerEnvVar)))
-	logger.Logger.Out = ioutil.Discard      // Discard all logs to the main logger
-	logger.Logger.Level = DisabledLevel - 1 // Always log at the highest possible level. Hooks will decide if the log goes through or not
 	logger.AddHooks(hooks...)
 	logger.PrintLevel = outputLevel
 	return logger
@@ -74,11 +80,26 @@ func (logger *Logger) Copy(module string) *Logger {
 	for key, hook := range logger.hooks {
 		hooks = append(hooks, NewHook(key, hook.level, hook.hook.inner))
 	}
-	newLogger := *logger
-	newLogger.hooks = nil
+	newLogger := &Logger{
+		Entry:      createInnerLogger(module, logger.Logger.ReportCaller).WithTime(logger.Time).WithContext(logger.Context),
+		PrintLevel: logger.PrintLevel,
+		Catcher:    logger.Catcher,
+		level:      logger.level,
+		remaining:  logger.remaining,
+		errors:     logger.errors,
+	}
 	newLogger.AddHooks(hooks...)
-	newLogger.Entry = logger.Entry.WithField(moduleFieldName, module)
-	return &newLogger
+	return newLogger
+}
+
+// CreateLogCatcherForWriter returns a new logger with the same hooks but a different output writer for the console hook
+func (logger *Logger) CreateLogCatcherForWriter(writer io.Writer) *Logger {
+	copy := logger.Copy(logger.GetModule())
+	oldHook := copy.Hook("")
+	newHook := NewConsoleHook("", oldHook.level, oldHook.GetFormatter())
+	newHook.SetStdout(writer)
+	copy.AddHooks(newHook)
+	return copy
 }
 
 // Child clones the logger, appending the child's name to the parent's module name.
@@ -229,7 +250,7 @@ func (logger *Logger) Hook(name string) *Hook {
 }
 
 // GetHookLevel returns the logging level associated with a specific logger.
-func (logger *Logger) GetHookLevel(name string, level interface{}) logrus.Level {
+func (logger *Logger) GetHookLevel(name string) logrus.Level {
 	if hook := logger.getHook(name); hook != nil {
 		return hook.level
 	}
@@ -294,13 +315,6 @@ func (logger *Logger) ClearError() error {
 	current := logger.errors.AsError()
 	logger.errors = nil
 	return current
-}
-
-// Writer is the implementation of io.Writer. You should not call directly this function.
-// The function will fail if called directly on a stream that have not been configured as out stream.
-func (logger *Logger) oldWrite(p []byte) (n int, err error) {
-	logger.Print(string(p))
-	return len(p), nil
 }
 
 // Close implements io.Closer
