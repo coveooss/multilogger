@@ -3,6 +3,9 @@ package multilogger
 import (
 	"fmt"
 	"os"
+	"path"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -11,8 +14,21 @@ import (
 type fileHook struct {
 	*genericHook
 	filename  string
+	isDir     bool
 	file      *os.File
 	addHeader bool
+}
+
+func (hook *fileHook) clone() logrus.Hook {
+	// Duplicate the file hook to ensure that the copy
+	// has its own attributes when the object is copied.
+	return &fileHook{
+		genericHook: hook.genericHook.clone(),
+		filename:    hook.filename,
+		isDir:       hook.isDir,
+		file:        hook.file,
+		addHeader:   hook.addHeader,
+	}
 }
 
 func (hook *fileHook) Fire(entry *logrus.Entry) (err error) {
@@ -27,12 +43,22 @@ func (hook *fileHook) Fire(entry *logrus.Entry) (err error) {
 
 		fileMutex.Lock()
 		defer fileMutex.Unlock()
+		targetFile := hook.filename
+		if hook.isDir {
+			targetFile = path.Join(hook.filename, strings.Replace(hook.logger.GetModule(), ":", ".", -1)) + ".log"
+			if targetFile, err = filepath.Abs(targetFile); err != nil {
+				return err
+			}
+			if hook.file != nil && hook.file.Name() != targetFile {
+				hook.file = nil
+			}
+		}
 		if hook.file == nil {
 			logFileExists := false
-			if _, err := os.Stat(hook.filename); err == nil {
+			if _, err := os.Stat(targetFile); err == nil {
 				logFileExists = true
 			}
-			if hook.file, err = os.OpenFile(hook.filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666); err != nil {
+			if hook.file, err = os.OpenFile(targetFile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666); err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
 			if hook.addHeader {

@@ -40,12 +40,13 @@ func NewConsoleHook(name string, level interface{}, format ...interface{}) *Hook
 // NewFileHook creates a new hook to log information into a file.
 //
 // level: Accept any kind of object, but must be resolvable into a valid logrus level name.
-func NewFileHook(filename string, level interface{}, format ...interface{}) *Hook {
+func NewFileHook(filename string, isDir bool, level interface{}, format ...interface{}) *Hook {
 	if format == nil {
 		format = append(format, NewFormatter(false, os.Getenv(FormatFileEnvVar), os.Getenv(FormatEnvVar), DefaultFileFormat))
 	}
 	return NewHook(filename, level, &fileHook{
 		genericHook: &genericHook{formatter: getFormatter(false, format...)},
+		isDir:       isDir,
 		filename:    filename,
 		addHeader:   true,
 	})

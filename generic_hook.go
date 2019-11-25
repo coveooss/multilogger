@@ -23,6 +23,10 @@ type genericHook struct {
 	logger    *Logger
 }
 
+func (hook genericHook) clone() *genericHook {
+	return &hook
+}
+
 func (hook *genericHook) formatEntry(name string, entry *logrus.Entry) (string, error) {
 	if hook.formatter == nil {
 		hook.formatter = NewFormatter(true, os.Getenv(FormatFileEnvVar), os.Getenv(FormatEnvVar), DefaultFileFormat)
