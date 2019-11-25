@@ -23,14 +23,11 @@ func (hook *fileHook) clone() logrus.Hook {
 	// Duplicate the file hook to ensure that the copy
 	// has its own attributes when the object is copied.
 	return &fileHook{
-		genericHook: &genericHook{
-			formatter: hook.formatter,
-			logger:    hook.logger,
-		},
-		filename:  hook.filename,
-		isDir:     hook.isDir,
-		file:      hook.file,
-		addHeader: hook.addHeader,
+		genericHook: hook.genericHook.clone(),
+		filename:    hook.filename,
+		isDir:       hook.isDir,
+		file:        hook.file,
+		addHeader:   hook.addHeader,
 	}
 }
 
