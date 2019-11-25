@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -162,7 +163,7 @@ func ExampleLogger_AddFile() {
 		defer os.Remove(logfile)
 	}
 
-	log.AddFile(logfile, logrus.TraceLevel)
+	log.AddFile(logfile, false, logrus.TraceLevel)
 	log.Info("This is information")
 	log.Warning("This is a warning")
 
@@ -176,6 +177,47 @@ func ExampleLogger_AddFile() {
 	// # 2018/06/24 12:34:56.789
 	// [file] 2018/06/24 12:34:56.789 INFO     This is information
 	// [file] 2018/06/24 12:34:56.789 WARNING  This is a warning
+}
+
+func ExampleLogger_AddFile_folder() {
+	log := getTestLogger("file")
+
+	logDir, err := ioutil.TempDir("", "example")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(logDir)
+
+	// Adding a log folder and creating a child logger
+	log.AddFile(logDir, true, logrus.TraceLevel)
+	childLogger := log.Child("submodule")
+
+	// Logging into the main logger and the child logger
+	log.Info("This is information")
+	childLogger.Warning("This is a warning")
+	childLogger.Info("This is information")
+
+	// Reading the main logger logs
+	firstFile := filepath.Join(logDir, "file.log")
+	firstContent, _ := ioutil.ReadFile(firstFile)
+	fmt.Println("Content of the first log file is:")
+	fmt.Println(string(firstContent))
+
+	// Reading the child logger logs
+	secondFile := filepath.Join(logDir, "file.submodule.log")
+	secondContent, _ := ioutil.ReadFile(secondFile)
+	fmt.Println("Content of the second log file is:")
+	fmt.Println(string(secondContent))
+	// Output:
+	// [file:submodule] 2018/06/24 12:34:56.789 WARNING  This is a warning
+	// Content of the first log file is:
+	// # 2018/06/24 12:34:56.789
+	// [file] 2018/06/24 12:34:56.789 INFO     This is information
+	//
+	// Content of the second log file is:
+	// # 2018/06/24 12:34:56.789
+	// [file:submodule] 2018/06/24 12:34:56.789 WARNING  This is a warning
+	// [file:submodule] 2018/06/24 12:34:56.789 INFO     This is information
 }
 
 func ExampleLogger_AddConsole_overwrite() {

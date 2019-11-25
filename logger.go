@@ -235,8 +235,8 @@ func (logger *Logger) AddConsole(name string, level interface{}, format ...inter
 }
 
 // AddFile adds a file hook to the current logger.
-func (logger *Logger) AddFile(filename string, level interface{}, format ...interface{}) *Logger {
-	return logger.AddHooks(NewFileHook(filename, level, format...))
+func (logger *Logger) AddFile(filename string, isDir bool, level interface{}, format ...interface{}) *Logger {
+	return logger.AddHooks(NewFileHook(filename, isDir, level, format...))
 }
 
 // RemoveHook deletes a hook from the hook collection.

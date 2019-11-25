@@ -21,9 +21,12 @@ func (hook *consoleHook) clone() logrus.Hook {
 	// Duplicate the console hook to ensure that the copy
 	// has its own attributes when the object is copied.
 	return &consoleHook{
-		genericHook: hook.genericHook,
-		out:         hook.out,
-		log:         hook.log,
+		genericHook: &genericHook{
+			formatter: hook.formatter,
+			logger:    hook.logger,
+		},
+		out: hook.out,
+		log: hook.log,
 	}
 }
 
