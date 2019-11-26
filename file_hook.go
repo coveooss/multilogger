@@ -54,6 +54,9 @@ func (hook *fileHook) Fire(entry *logrus.Entry) (err error) {
 			}
 		}
 		if hook.file == nil {
+			if err := os.MkdirAll(path.Dir(targetFile), 0766); err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
 			logFileExists := false
 			if _, err := os.Stat(targetFile); err == nil {
 				logFileExists = true
@@ -65,11 +68,11 @@ func (hook *fileHook) Fire(entry *logrus.Entry) (err error) {
 				if logFileExists {
 					// Add a bit of whitespace before logging
 					if err := hook.printf(name, hook.file, "\n"); err != nil {
-						return err
+						return fmt.Errorf("%s: %w", name, err)
 					}
 				}
 				if err := hook.printf(name, hook.file, "# %v\n", entry.Time.Format(defaultTimestampFormat)); err != nil {
-					return err
+					return fmt.Errorf("%s: %w", name, err)
 				}
 			}
 		}

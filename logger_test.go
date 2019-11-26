@@ -190,7 +190,7 @@ func ExampleLogger_AddFile_folder() {
 
 	// Adding a log folder and creating a child logger
 	log.AddFile(logDir, true, logrus.TraceLevel)
-	childLogger := log.Child("submodule")
+	childLogger := log.Child("folder/module")
 
 	// Logging into the main logger and the child logger
 	log.Info("This is information")
@@ -204,20 +204,20 @@ func ExampleLogger_AddFile_folder() {
 	fmt.Println(string(firstContent))
 
 	// Reading the child logger logs
-	secondFile := filepath.Join(logDir, "file.submodule.log")
+	secondFile := filepath.Join(logDir, "file.folder", "module.log")
 	secondContent, _ := ioutil.ReadFile(secondFile)
 	fmt.Println("Content of the second log file is:")
 	fmt.Println(string(secondContent))
 	// Output:
-	// [file:submodule] 2018/06/24 12:34:56.789 WARNING  This is a warning
+	// [file:folder/module] 2018/06/24 12:34:56.789 WARNING  This is a warning
 	// Content of the first log file is:
 	// # 2018/06/24 12:34:56.789
 	// [file] 2018/06/24 12:34:56.789 INFO     This is information
 	//
 	// Content of the second log file is:
 	// # 2018/06/24 12:34:56.789
-	// [file:submodule] 2018/06/24 12:34:56.789 WARNING  This is a warning
-	// [file:submodule] 2018/06/24 12:34:56.789 INFO     This is information
+	// [file:folder/module] 2018/06/24 12:34:56.789 WARNING  This is a warning
+	// [file:folder/module] 2018/06/24 12:34:56.789 INFO     This is information
 }
 
 func ExampleLogger_AddConsole_overwrite() {
