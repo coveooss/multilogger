@@ -54,14 +54,22 @@ func (hook *fileHook) Fire(entry *logrus.Entry) (err error) {
 			}
 		}
 		if hook.file == nil {
-			if err := os.MkdirAll(path.Dir(targetFile), 0777); err != nil {
+			logDir := path.Dir(targetFile)
+			if err := os.MkdirAll(logDir, 0777); err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
+			if err := os.Chmod(logDir, 0777); err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+
 			logFileExists := false
 			if _, err := os.Stat(targetFile); err == nil {
 				logFileExists = true
 			}
 			if hook.file, err = os.OpenFile(targetFile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777); err != nil {
+				return fmt.Errorf("%s: %w", name, err)
+			}
+			if err := os.Chmod(targetFile, 0777); err != nil {
 				return fmt.Errorf("%s: %w", name, err)
 			}
 			if hook.addHeader {
