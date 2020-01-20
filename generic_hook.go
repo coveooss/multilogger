@@ -39,7 +39,10 @@ func (hook *genericHook) formatEntry(name string, entry *logrus.Entry) (string, 
 }
 
 func (hook *genericHook) printf(source string, out io.Writer, format string, args ...interface{}) error {
-	text := fmt.Sprintf(format, args...)
+	text := format
+	if len(args) > 0 {
+		text = fmt.Sprintf(format, args...)
+	}
 	if n, err := out.Write([]byte(text)); err != nil {
 		return fmt.Errorf("%s: %w", source, err)
 	} else if n != len(text) {

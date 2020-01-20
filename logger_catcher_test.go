@@ -147,6 +147,7 @@ func ExampleNew_log_catcher() {
 		"[Error] Oops! there is an error",
 		"This should be considered as a [warning] message",
 		"This should go directly to output",
+		"Format tags like %hello in output aren't considered",
 	}
 	for _, line := range lines {
 		io.WriteString(stdin, line+"\n")
@@ -160,6 +161,7 @@ func ExampleNew_log_catcher() {
 	// [catcher] 2018/06/24 12:34:56.789 ERROR    Oops! there is an error
 	// [catcher] 2018/06/24 12:34:56.789 WARNING  This should be considered as a warning message
 	// This should go directly to output
+	// Format tags like %hello in output aren't considered
 }
 
 func ExampleNew_log_catcher_disabled() {
