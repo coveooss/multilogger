@@ -50,6 +50,7 @@ type Formatter struct {
 	replacer       *replacer
 	color          bool
 	initOnce       sync.Once
+	replacerLock   sync.Mutex
 	baseTime, last time.Time
 }
 
