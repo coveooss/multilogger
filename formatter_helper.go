@@ -21,7 +21,7 @@ func (f *Formatter) doFormat(entry *logrus.Entry) (string, error) {
 			return "", err
 		}
 	}
-	f.replacerLock.Unlock()
+	defer f.replacerLock.Unlock()
 
 	output := f.replacer.format + "\n"
 
