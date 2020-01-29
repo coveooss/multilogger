@@ -3,6 +3,7 @@ package multilogger
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/acarl005/stripansi"
@@ -43,6 +44,7 @@ type fieldReplacer struct {
 	limit            *uint
 	position         uint
 	out              map[logrus.Level]func(...interface{}) string
+	outMutex         sync.RWMutex
 }
 
 func (r *fieldReplacer) replace(entry *logrus.Entry, used map[string]uint) (string, *fieldReplacer) {
@@ -156,7 +158,9 @@ func (r *fieldReplacer) format(key, value string, printKey bool, level logrus.Le
 		value += " "
 	}
 
+	r.outMutex.RLock()
 	sprint := r.out[level]
+	r.outMutex.RUnlock()
 	if sprint == nil {
 		if r.Formatter.color && (r.color || len(r.attributes) != 0) {
 			var attributes []multicolor.Attribute
@@ -168,7 +172,9 @@ func (r *fieldReplacer) format(key, value string, printKey bool, level logrus.Le
 		} else {
 			sprint = fmt.Sprint
 		}
+		r.outMutex.Lock()
 		r.out[level] = sprint
+		r.outMutex.Unlock()
 	}
 	value = sprint(value)
 

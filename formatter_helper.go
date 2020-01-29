@@ -15,11 +15,13 @@ import (
 )
 
 func (f *Formatter) doFormat(entry *logrus.Entry) (string, error) {
+	f.replacerLock.Lock()
 	if f.replacer == nil {
 		if err := f.presetFormatString(); err != nil {
 			return "", err
 		}
 	}
+	defer f.replacerLock.Unlock()
 
 	output := f.replacer.format + "\n"
 
