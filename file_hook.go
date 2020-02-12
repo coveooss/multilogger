@@ -7,9 +7,22 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/sirupsen/logrus"
 )
+
+func cleanupModuleName(moduleName string) string {
+	return strings.Trim(strings.Map(
+		func(r rune) rune {
+			if unicode.IsLetter(r) || unicode.IsDigit(r) || r == os.PathSeparator || r == ':' {
+				return r
+			}
+			return -1
+		},
+		moduleName,
+	), string(os.PathSeparator))
+}
 
 type fileHook struct {
 	*genericHook
@@ -45,7 +58,8 @@ func (hook *fileHook) Fire(entry *logrus.Entry) (err error) {
 		defer fileMutex.Unlock()
 		targetFile := hook.filename
 		if hook.isDir {
-			targetFile = path.Join(hook.filename, strings.Replace(hook.logger.GetModule(), ":", ".", -1)) + ".log"
+			moduleName := cleanupModuleName(hook.logger.GetModule())
+			targetFile = path.Join(hook.filename, strings.Replace(moduleName, ":", ".", -1)) + ".log"
 			if targetFile, err = filepath.Abs(targetFile); err != nil {
 				return err
 			}
