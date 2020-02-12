@@ -15,13 +15,13 @@ import (
 func cleanupModuleName(moduleName string) string {
 	return strings.Trim(strings.Map(
 		func(r rune) rune {
-			if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '/' || r == ':' {
+			if unicode.IsLetter(r) || unicode.IsDigit(r) || r == os.PathSeparator || r == ':' {
 				return r
 			}
 			return -1
 		},
 		moduleName,
-	), "/")
+	), string(os.PathSeparator))
 }
 
 type fileHook struct {
