@@ -220,6 +220,33 @@ func ExampleLogger_AddFile_folder() {
 	// [file:folder/module] 2018/06/24 12:34:56.789 INFO     This is information
 }
 
+func ExampleLogger_AddFile_folderWithInvalidModuleName() {
+	// Create a test logger with lots of special chars in its name
+	loggerName := "/abc:def!/g$%?&*().,;`^<>/"
+	log := getTestLogger(loggerName)
+
+	logDir, err := ioutil.TempDir("", "example")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(logDir)
+
+	// Adding a log folder
+	log.AddFile(logDir, true, logrus.TraceLevel)
+
+	// Logging into the main logger and the child logger
+	log.Info("This is information")
+
+	// Reading the logs (all the special chars except OS separators and module separators (:) will be removed from the file name)
+	firstFile := filepath.Join(logDir, "abc.def", "g.log")
+	firstContent, _ := ioutil.ReadFile(firstFile)
+	fmt.Println(string(firstContent))
+
+	// Output:
+	// # 2018/06/24 12:34:56.789
+	// [/abc:def!/g$%?&*().,;`^<>/] 2018/06/24 12:34:56.789 INFO     This is information
+}
+
 func ExampleLogger_AddConsole_overwrite() {
 	log := getTestLogger("json")
 
