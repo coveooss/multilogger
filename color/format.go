@@ -32,10 +32,12 @@ func Printf(args ...interface{}) (int, error) { return fmt.Fprintf(color.Output,
 func ErrorPrint(args ...interface{}) (int, error) { return fmt.Fprint(color.Error, Sprint(args...)) }
 
 // ErrorPrintln call standard fmt.Println function but using the color out stream.
-func ErrorPrintln(args ...interface{}) (int, error) { return fmt.Fprint(color.Error, Sprintln(args...)) }
+func ErrorPrintln(args ...interface{}) (int, error) {
+	return fmt.Fprint(color.Error, Sprintln(args...))
+}
 
 // ErrorPrintf call standard fmt.Printf function but using the color out stream.
-func ErrorPrintf(format string, args ...interface{}) (int, error) {
+func ErrorPrintf(args ...interface{}) (int, error) {
 	return fmt.Fprintf(color.Error, Sprintf(args...))
 }
 
