@@ -53,6 +53,13 @@ func (r *fieldReplacer) replace(entry *logrus.Entry, used map[string]uint) (stri
 
 	computeduration := func(begin time.Time) string {
 		delay := entry.Time.Sub(begin)
+		round := r.RoundDuration
+		if round == 0 {
+			round = roundDuration
+		}
+		if delay = delay.Round(round); delay == 0 {
+			return fmt.Sprintf("<%v", round)
+		}
 		if r.FormatDuration != nil {
 			return r.FormatDuration(delay)
 		}

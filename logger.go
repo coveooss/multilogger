@@ -15,20 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	// CallerEnvVar is an environment variable that enable the caller stack by default.
-	CallerEnvVar = "MULTILOGGER_CALLER"
-	// FormatEnvVar is an environment variable that allows users to set the default format used for log entry.
-	FormatEnvVar = "MULTILOGGER_FORMAT"
-	// FormatFileEnvVar is an environment variable that allows users to set the default format used for log entry using a file logger.
-	FormatFileEnvVar = "MULTILOGGER_FILE_FORMAT"
-	// DefaultFileFormat is the format used by NewFileHook if neither MULTILOGGER_FORMAT or MULTILOGGER_FILE_FORMAT are set.
-	DefaultFileFormat = "%module:SquareBrackets,IgnoreEmpty,Space%%time% %-8level:upper% %message%"
-)
-
-const (
-	moduleFieldName = "module-field"
-)
+const moduleFieldName = "module-field"
 
 // Logger represents a logger that logs to both a file and the console at different (configurable) levels.
 type Logger struct {

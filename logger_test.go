@@ -29,6 +29,7 @@ func getTestLogger(name string, level ...interface{}) *Logger {
 		color = false
 	}
 
+	globalTime = baseTime
 	return New(name, NewConsoleHook("", level[0]).SetColor(color)).WithTime(baseTime)
 }
 
@@ -254,6 +255,7 @@ func ExampleLogger_AddConsole_overwrite() {
 	// We also set the JSON formatter to pretty format the JSON code.
 	log.AddConsole("", logrus.WarnLevel, &logrus.JSONFormatter{PrettyPrint: true})
 	log.Warning("New JSON log")
+
 	// Output:
 	// {
 	//   "level": "warning",
@@ -261,4 +263,63 @@ func ExampleLogger_AddConsole_overwrite() {
 	//   "msg": "New JSON log",
 	//   "time": "2018-06-24T12:34:56Z"
 	// }
+}
+
+func ExampleLogger_Formatter_roundDuration() {
+	log := getTestLogger("field", "Trace")
+
+	// We set the format of the log to include fields
+	log.SetFormat("%time% %globaldelay:round% %level:upper% %message%")
+	log.Formatter().RoundDuration = 5 * time.Millisecond
+
+	log.Info("Starting")
+	for i := time.Duration(1); i < 24*time.Hour; {
+		i *= 10
+		log.WithTime(baseTime.Add(i)).Infof("%v later", i)
+	}
+
+	// Output:
+	// 2018/06/24 12:34:56.789 (<5ms) INFO Starting
+	// 2018/06/24 12:34:56.789 (<5ms) INFO 10ns later
+	// 2018/06/24 12:34:56.789 (<5ms) INFO 100ns later
+	// 2018/06/24 12:34:56.789 (<5ms) INFO 1µs later
+	// 2018/06/24 12:34:56.789 (<5ms) INFO 10µs later
+	// 2018/06/24 12:34:56.789 (<5ms) INFO 100µs later
+	// 2018/06/24 12:34:56.790 (<5ms) INFO 1ms later
+	// 2018/06/24 12:34:56.799 (10ms) INFO 10ms later
+	// 2018/06/24 12:34:56.889 (100ms) INFO 100ms later
+	// 2018/06/24 12:34:57.789 (1s) INFO 1s later
+	// 2018/06/24 12:35:06.789 (10s) INFO 10s later
+	// 2018/06/24 12:36:36.789 (1m40s) INFO 1m40s later
+	// 2018/06/24 12:51:36.789 (16m40s) INFO 16m40s later
+	// 2018/06/24 15:21:36.789 (2h46m40s) INFO 2h46m40s later
+	// 2018/06/25 16:21:36.789 (1d3h46m40s) INFO 27h46m40s later
+}
+
+func ExampleSetDurationPrecision() {
+	log := getTestLogger("field", "Trace")
+
+	// We set the format of the log to include fields
+	log.SetFormat("%time% %globaldelay:round% %level:upper% %message%")
+	SetDurationPrecision(2*time.Second, true)
+
+	log.Info("Starting")
+	for i := time.Duration(1); i < 24*time.Hour; {
+		i *= 22
+		log.WithTime(baseTime.Add(i)).Infof("%v later", i)
+	}
+
+	// Output:
+	// 2018/06/24 12:34:56.789 (<2s) INFO Starting
+	// 2018/06/24 12:34:56.789 (<2s) INFO 22ns later
+	// 2018/06/24 12:34:56.789 (<2s) INFO 484ns later
+	// 2018/06/24 12:34:56.789 (<2s) INFO 10.648µs later
+	// 2018/06/24 12:34:56.789 (<2s) INFO 234.256µs later
+	// 2018/06/24 12:34:56.794 (<2s) INFO 5.153632ms later
+	// 2018/06/24 12:34:56.902 (<2s) INFO 113.379904ms later
+	// 2018/06/24 12:34:59.283 (2s) INFO 2.494357888s later
+	// 2018/06/24 12:35:51.664 (54s) INFO 54.875873536s later
+	// 2018/06/24 12:55:04.058 (20m8s) INFO 20m7.269217792s later
+	// 2018/06/24 19:57:36.711 (7h22m40s) INFO 7h22m39.922791424s later
+	// 2018/07/01 06:53:35.090 (6d18h18m38s) INFO 162h18m38.301411328s later
 }
