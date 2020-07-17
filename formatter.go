@@ -39,6 +39,9 @@ type Formatter struct {
 	FormatDuration  func(time.Duration) string
 	FormatCaller    func(*runtime.Frame) string
 
+	// RoundDuration allows user to define the granularity of durations
+	RoundDuration time.Duration
+
 	// ColorMap allows user to define the color attributes associated with the error level.
 	// Attribute names are defined by http://github.com/fatih/color
 	ColorMap map[logrus.Level][]multicolor.Attribute
