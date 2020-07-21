@@ -266,7 +266,7 @@ func ExampleLogger_AddConsole_overwrite() {
 }
 
 func ExampleLogger_Formatter_roundDuration() {
-	log := getTestLogger("field", "Trace")
+	log := getTestLogger("RoundDuration", logrus.InfoLevel)
 
 	// We set the format of the log to include fields
 	log.SetFormat("%time% %globaldelay:round% %level:upper% %message%")
@@ -292,34 +292,49 @@ func ExampleLogger_Formatter_roundDuration() {
 	// 2018/06/24 12:35:06.789 (10s) INFO 10s later
 	// 2018/06/24 12:36:36.789 (1m40s) INFO 1m40s later
 	// 2018/06/24 12:51:36.789 (16m40s) INFO 16m40s later
-	// 2018/06/24 15:21:36.789 (2h46m40s) INFO 2h46m40s later
-	// 2018/06/25 16:21:36.789 (1d3h46m40s) INFO 27h46m40s later
+	// 2018/06/24 15:21:36.789 (2h47m) INFO 2h46m40s later
+	// 2018/06/25 16:21:36.789 (1d3h47m) INFO 27h46m40s later
 }
 
 func ExampleSetDurationPrecision() {
-	log := getTestLogger("field", "Trace")
+	const format = "%module:square% %time% %globaldelay:round% %message%"
+	log := getTestLogger("", logrus.InfoLevel).SetModule("Rounded").SetFormat(format)
+	defaultLog := getTestLogger("", logrus.TraceLevel).SetModule("Default").SetFormat(format)
+	defaultLog.Formatter().FormatDuration = FormatDurationNative
 
 	// We set the format of the log to include fields
-	log.SetFormat("%time% %globaldelay:round% %level:upper% %message%")
-	SetDurationPrecision(2*time.Second, true)
+	SetDurationPrecision(time.Nanosecond, true)
 
-	log.Info("Starting")
-	for i := time.Duration(1); i < 24*time.Hour; {
-		i *= 22
-		log.WithTime(baseTime.Add(i)).Infof("%v later", i)
+	for i := time.Duration(1); i < 365*24*time.Hour; {
+		i *= 25 + time.Nanosecond
+		t := baseTime.Add(i)
+		log.WithTime(t).Infof("%v later", i)
+		defaultLog.WithTime(t).Tracef("%v later", i)
 	}
 
 	// Output:
-	// 2018/06/24 12:34:56.789 (<2s) INFO Starting
-	// 2018/06/24 12:34:56.789 (<2s) INFO 22ns later
-	// 2018/06/24 12:34:56.789 (<2s) INFO 484ns later
-	// 2018/06/24 12:34:56.789 (<2s) INFO 10.648µs later
-	// 2018/06/24 12:34:56.789 (<2s) INFO 234.256µs later
-	// 2018/06/24 12:34:56.794 (<2s) INFO 5.153632ms later
-	// 2018/06/24 12:34:56.902 (<2s) INFO 113.379904ms later
-	// 2018/06/24 12:34:59.283 (2s) INFO 2.494357888s later
-	// 2018/06/24 12:35:51.664 (54s) INFO 54.875873536s later
-	// 2018/06/24 12:55:04.058 (20m8s) INFO 20m7.269217792s later
-	// 2018/06/24 19:57:36.711 (7h22m40s) INFO 7h22m39.922791424s later
-	// 2018/07/01 06:53:35.090 (6d18h18m38s) INFO 162h18m38.301411328s later
+	// [Rounded] 2018/06/24 12:34:56.789 (26ns) 26ns later
+	// [Default] 2018/06/24 12:34:56.789 (26ns) 26ns later
+	// [Rounded] 2018/06/24 12:34:56.789 (676ns) 676ns later
+	// [Default] 2018/06/24 12:34:56.789 (676ns) 676ns later
+	// [Rounded] 2018/06/24 12:34:56.789 (18µs) 17.576µs later
+	// [Default] 2018/06/24 12:34:56.789 (17.576µs) 17.576µs later
+	// [Rounded] 2018/06/24 12:34:56.789 (457µs) 456.976µs later
+	// [Default] 2018/06/24 12:34:56.789 (456.976µs) 456.976µs later
+	// [Rounded] 2018/06/24 12:34:56.800 (12ms) 11.881376ms later
+	// [Default] 2018/06/24 12:34:56.800 (11.881376ms) 11.881376ms later
+	// [Rounded] 2018/06/24 12:34:57.097 (309ms) 308.915776ms later
+	// [Default] 2018/06/24 12:34:57.097 (308.915776ms) 308.915776ms later
+	// [Rounded] 2018/06/24 12:35:04.820 (8s30ms) 8.031810176s later
+	// [Default] 2018/06/24 12:35:04.820 (8.031810176s) 8.031810176s later
+	// [Rounded] 2018/06/24 12:38:25.616 (3m29s) 3m28.827064576s later
+	// [Default] 2018/06/24 12:38:25.616 (3m28.827064576s) 3m28.827064576s later
+	// [Rounded] 2018/06/24 14:05:26.292 (1h30m) 1h30m29.503678976s later
+	// [Default] 2018/06/24 14:05:26.292 (1h30m29.503678976s) 1h30m29.503678976s later
+	// [Rounded] 2018/06/26 03:47:43.884 (1d15h13m) 39h12m47.095653376s later
+	// [Default] 2018/06/26 03:47:43.884 (39h12m47.095653376s) 39h12m47.095653376s later
+	// [Rounded] 2018/08/06 00:07:21.275 (6w) 1019h32m24.486987776s later
+	// [Default] 2018/08/06 00:07:21.275 (1019h32m24.486987776s) 1019h32m24.486987776s later
+	// [Rounded] 2021/07/03 00:37:33.450 (3y3w4d) 26508h2m36.661682176s later
+	// [Default] 2021/07/03 00:37:33.450 (26508h2m36.661682176s) 26508h2m36.661682176s later
 }

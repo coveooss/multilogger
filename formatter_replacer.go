@@ -87,7 +87,11 @@ func (r *fieldReplacer) replace(entry *logrus.Entry, used map[string]uint) (stri
 			field = fmt.Sprint(entry.Level)
 		}
 	case tokenTime:
-		field = entry.Time.Format(r.TimestampFormat)
+		if globalZone != nil {
+			field = entry.Time.In(globalZone).Format(r.TimestampFormat)
+		} else {
+			field = entry.Time.Format(r.TimestampFormat)
+		}
 	case tokenDelta:
 		field = computeduration(r.last)
 	case tokenDelay:
