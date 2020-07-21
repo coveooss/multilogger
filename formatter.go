@@ -16,6 +16,7 @@ const (
 	defaultTimestampFormat = "2006/01/02 15:04:05.000"
 	defaultLogFormat       = "[%.4level:color,upper%]: %time% - %message%"
 	timeEnvVar             = "MULTILOGGER_BASETIME"
+	zoneEnvVar             = "MULTILOGGER_TIMEZONE"
 )
 
 type formatterI interface {
@@ -95,7 +96,7 @@ func (f *Formatter) init() {
 		f.format = defaultLogFormat
 	}
 	if f.FormatDuration == nil {
-		f.FormatDuration = FormatDuration
+		f.FormatDuration = FormatDurationRounded
 	}
 	if f.FormatCaller == nil {
 		f.FormatCaller = func(frame *runtime.Frame) (result string) {
@@ -128,6 +129,14 @@ func (f *Formatter) init() {
 	f.baseTime = time.Now()
 	f.last = f.baseTime
 	if globalTime.IsZero() {
+		if zone := os.Getenv(zoneEnvVar); zone != "" {
+			var name string
+			var offset int
+			fmt.Sscanf(os.Getenv(zoneEnvVar), "%s %d", &name, &offset)
+			globalZone = time.FixedZone(name, offset)
+		} else {
+			globalZone = f.baseTime.Location()
+		}
 		if t := os.Getenv(timeEnvVar); t != "" {
 			var err error
 			if globalTime, err = time.Parse(time.RFC3339, t); err == nil {
@@ -135,8 +144,14 @@ func (f *Formatter) init() {
 			}
 		}
 		globalTime = f.baseTime
+
+		name, offset := globalTime.Zone()
+		os.Setenv(zoneEnvVar, fmt.Sprintf("%s %d", name, offset))
 		os.Setenv(timeEnvVar, globalTime.Format(time.RFC3339))
 	}
 }
 
-var globalTime time.Time
+var (
+	globalTime time.Time
+	globalZone *time.Location
+)
