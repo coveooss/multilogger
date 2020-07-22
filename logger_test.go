@@ -300,7 +300,7 @@ func ExampleSetDurationPrecision() {
 	const format = "%module:square% %time% %globaldelay:round% %message%"
 	log := getTestLogger("", logrus.InfoLevel).SetModule("Rounded").SetFormat(format)
 	defaultLog := getTestLogger("", logrus.TraceLevel).SetModule("Default").SetFormat(format)
-	defaultLog.Formatter().FormatDuration = FormatDurationNative
+	defaultLog.Formatter().FormatDuration = GetDurationFunc(NativeFormat, false, false)
 
 	// We set the format of the log to include fields
 	SetDurationPrecision(time.Nanosecond, true)
@@ -312,22 +312,22 @@ func ExampleSetDurationPrecision() {
 		defaultLog.WithTime(t).Tracef("%v later", i)
 	}
 
-	// Output:
+	// // Output:
 	// [Rounded] 2018/06/24 12:34:56.789 (26ns) 26ns later
 	// [Default] 2018/06/24 12:34:56.789 (26ns) 26ns later
 	// [Rounded] 2018/06/24 12:34:56.789 (676ns) 676ns later
 	// [Default] 2018/06/24 12:34:56.789 (676ns) 676ns later
-	// [Rounded] 2018/06/24 12:34:56.789 (18µs) 17.576µs later
+	// [Rounded] 2018/06/24 12:34:56.789 (17.58µs) 17.576µs later
 	// [Default] 2018/06/24 12:34:56.789 (17.576µs) 17.576µs later
-	// [Rounded] 2018/06/24 12:34:56.789 (457µs) 456.976µs later
+	// [Rounded] 2018/06/24 12:34:56.789 (456.98µs) 456.976µs later
 	// [Default] 2018/06/24 12:34:56.789 (456.976µs) 456.976µs later
-	// [Rounded] 2018/06/24 12:34:56.800 (12ms) 11.881376ms later
+	// [Rounded] 2018/06/24 12:34:56.800 (11.88ms) 11.881376ms later
 	// [Default] 2018/06/24 12:34:56.800 (11.881376ms) 11.881376ms later
-	// [Rounded] 2018/06/24 12:34:57.097 (309ms) 308.915776ms later
+	// [Rounded] 2018/06/24 12:34:57.097 (308.92ms) 308.915776ms later
 	// [Default] 2018/06/24 12:34:57.097 (308.915776ms) 308.915776ms later
-	// [Rounded] 2018/06/24 12:35:04.820 (8s30ms) 8.031810176s later
+	// [Rounded] 2018/06/24 12:35:04.820 (8.03s) 8.031810176s later
 	// [Default] 2018/06/24 12:35:04.820 (8.031810176s) 8.031810176s later
-	// [Rounded] 2018/06/24 12:38:25.616 (3m29s) 3m28.827064576s later
+	// [Rounded] 2018/06/24 12:38:25.616 (3m30s) 3m28.827064576s later
 	// [Default] 2018/06/24 12:38:25.616 (3m28.827064576s) 3m28.827064576s later
 	// [Rounded] 2018/06/24 14:05:26.292 (1h30m) 1h30m29.503678976s later
 	// [Default] 2018/06/24 14:05:26.292 (1h30m29.503678976s) 1h30m29.503678976s later
