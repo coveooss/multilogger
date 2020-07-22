@@ -13,10 +13,12 @@ import (
 
 const (
 	// Default log format will output [INFO]: 2006-01-02T15:04:05Z07:00 - Log message
-	defaultTimestampFormat = "2006/01/02 15:04:05.000"
-	defaultLogFormat       = "[%.4level:color,upper%]: %time% - %message%"
-	timeEnvVar             = "MULTILOGGER_BASETIME"
-	zoneEnvVar             = "MULTILOGGER_TIMEZONE"
+	defaultTimestampFormat  = "2006/01/02 15:04:05.000"
+	defaultLogFormat        = "[%.4level:color,upper%]: %time% - %message%"
+	timeEnvVar              = "MULTILOGGER_BASETIME"
+	zoneEnvVar              = "MULTILOGGER_TIMEZONE"
+	durationFormatEnvVar    = "MULTILOGGER_DURATION_FORMAT"
+	durationPrecisionEnvVar = "MULTILOGGER_DURATION_PRECISION"
 )
 
 type formatterI interface {
@@ -96,7 +98,14 @@ func (f *Formatter) init() {
 		f.format = defaultLogFormat
 	}
 	if f.FormatDuration == nil {
-		f.FormatDuration = FormatDurationRounded
+		if format := os.Getenv(durationFormatEnvVar); format != "" {
+			var style int
+			var rounded, long bool
+			fmt.Sscanf(format, "%d%t%t", &style, &rounded, &long)
+			f.FormatDuration = GetDurationFunc(DurationFormat(style), rounded, long)
+		} else {
+			f.FormatDuration = GetDurationFunc(ClassicFormat, true, false)
+		}
 	}
 	if f.FormatCaller == nil {
 		f.FormatCaller = func(frame *runtime.Frame) (result string) {
