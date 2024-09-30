@@ -45,7 +45,7 @@ func (hook *fileHook) clone() logrus.Hook {
 }
 
 func (hook *fileHook) Fire(entry *logrus.Entry) (err error) {
-	return hook.fire(entry, func() error {
+	return hook.fire(entry, func(entry *logrus.Entry) error {
 		name := fmt.Sprintf("FileHook %s", hook.filename)
 		output := entry.Message
 		if entry.Level != outputLevel {

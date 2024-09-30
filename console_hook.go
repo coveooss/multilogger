@@ -28,7 +28,7 @@ func (hook *consoleHook) clone() logrus.Hook {
 }
 
 func (hook *consoleHook) Fire(entry *logrus.Entry) (err error) {
-	return hook.fire(entry, func() error {
+	return hook.fire(entry, func(entry *logrus.Entry) error {
 		const name = "ConsoleHook"
 		if entry.Level == outputLevel {
 			return hook.printf(name, hook.out, entry.Message)

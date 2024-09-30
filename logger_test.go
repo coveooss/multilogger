@@ -45,7 +45,7 @@ func ExampleNew_default() {
 }
 
 func ExampleNew_settingLoggingLevel() {
-	// Logging level could be set by explicitely declaring the hook
+	// Logging level could be set by explicitly declaring the hook
 	log := New("console", NewConsoleHook("", logrus.InfoLevel))
 	log.Println("The logging level is set to", log.GetLevel())
 
@@ -156,19 +156,19 @@ func ExampleLogger_AddConsole() {
 func ExampleLogger_AddFile() {
 	log := getTestLogger("file")
 
-	var logfile string
+	var log_file string
 	if temp, err := ioutil.TempFile("", "example"); err != nil {
 		log.Fatal(err)
 	} else {
-		logfile = temp.Name()
-		defer os.Remove(logfile)
+		log_file = temp.Name()
+		defer os.Remove(log_file)
 	}
 
-	log.AddFile(logfile, false, logrus.TraceLevel)
+	log.AddFile(log_file, false, logrus.TraceLevel)
 	log.Info("This is information")
 	log.Warning("This is a warning")
 
-	content, _ := ioutil.ReadFile(logfile)
+	content, _ := ioutil.ReadFile(log_file)
 	fmt.Println("Content of the log file is:")
 	fmt.Println(string(content))
 	// Output:

@@ -61,7 +61,7 @@ func TryGetDurationFunc(format DurationFormat, rounded, longUnit bool) (Duration
 		minUnit = time.Minute
 		maxUnit = day
 	default:
-		return func(d time.Duration) string { return fmt.Sprintf("%v", d) }, fmt.Errorf("Unknown format %v", format)
+		return func(d time.Duration) string { return fmt.Sprintf("%v", d) }, fmt.Errorf("unknown format %v", format)
 	}
 
 	return func(d time.Duration) string {

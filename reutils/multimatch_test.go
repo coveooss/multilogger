@@ -9,9 +9,6 @@ import (
 )
 
 func TestMultiMatch(t *testing.T) {
-	type args struct {
-		s string
-	}
 	tests := []struct {
 		name        string
 		s           string

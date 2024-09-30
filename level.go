@@ -62,7 +62,7 @@ func TryParseLogLevel(level interface{}) (logrus.Level, error) {
 	}
 	parsedLevel, err := logrus.ParseLevel(levelString)
 	if err != nil {
-		return DisabledLevel, fmt.Errorf("Unable to parse logging level: %w", err)
+		return DisabledLevel, fmt.Errorf("unable to parse logging level: %w", err)
 	}
 	return parsedLevel, nil
 }

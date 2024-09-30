@@ -21,11 +21,6 @@ const (
 	durationPrecisionEnvVar = "MULTILOGGER_DURATION_PRECISION"
 )
 
-type formatterI interface {
-	SetLogFormat(...string) *Formatter
-	SetColor(bool)
-}
-
 // NewFormatter creates a new formatter with color setting and takes the first defined format string as the log format.
 func NewFormatter(color bool, formats ...interface{}) *Formatter {
 	f := &Formatter{color: color}

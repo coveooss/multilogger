@@ -1,3 +1,4 @@
+//go:build linux || darwin
 // +build linux darwin
 
 package multicolor
@@ -102,7 +103,7 @@ func ExamplePrintf() {
 	Printf("red", "Hello", "world!", 1, math.Pi)
 	// Output:
 	// HelloHello world 123
-	// Hello%!!(MISSING)(EXTRA string=world!, int=1, float64=3.141592653589793)
+	// Hello%!(EXTRA string=world!, int=1, float64=3.141592653589793)
 }
 
 func ExampleErrorPrint() {
@@ -147,7 +148,7 @@ func ExampleErrorPrintf() {
 	ErrorPrintf("red", "Hello", "world!", 1, math.Pi)
 	// Output:
 	// HelloHello world 123
-	// Hello%!!(MISSING)(EXTRA string=world!, int=1, float64=3.141592653589793)
+	// Hello%!(EXTRA string=world!, int=1, float64=3.141592653589793)
 }
 
 func TestFormatMessage(t *testing.T) {
