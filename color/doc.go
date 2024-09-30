@@ -5,13 +5,13 @@
 /*
 Package multicolor is a complement to github.com/fatih/color.
 
-Description
+# Description
 
 It allows working with colors and attributes by using their string names. It also provides various print functions
 (Sprint, Sprintf, Sprintln, Print, Printf, Println, ErrorPrint, ErrorPrintf and Println) to let users provides colors
 and attributes before the actual text they want to print.
 
-Use it as io.Writer
+# Use it as io.Writer
 
 Color objects defined by fatih cannot be used to configure a stream. With multicolor, Color objects can be
 configured as out stream or error stream.
@@ -36,7 +36,7 @@ configured as out stream or error stream.
 	    ErrorPrintln("There is something wrong!")
 	}
 
-Example
+# Example
 
 Here is a complete example:
 
@@ -70,6 +70,7 @@ Here is a complete example:
 
 The attributes name are not case significant. Any attributes defined in the constants can be used as
 string. For simplicity, it is allowed to forget the prefix FG to specify foreground colors.
+
 	Blue      = FgBlue
 	HiMagenta = FgHiMagenta
 */

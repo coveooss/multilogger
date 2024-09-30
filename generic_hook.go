@@ -51,7 +51,7 @@ func (hook *genericHook) printf(source string, out io.Writer, format string, arg
 	return nil
 }
 
-func (hook *genericHook) fire(entry *logrus.Entry, f func() error) (err error) {
+func (hook *genericHook) fire(entry *logrus.Entry, f func(entry *logrus.Entry) error) (err error) {
 	defer func() {
 		err = errors.Trap(err, recover())
 		if hook.logger != nil && err != nil {
@@ -61,11 +61,11 @@ func (hook *genericHook) fire(entry *logrus.Entry, f func() error) (err error) {
 		}
 	}()
 
-	return f()
+	return f(entry)
 }
 
 func (hook *genericHook) Levels() []logrus.Level                  { return nil }
-func (hook *genericHook) Fire(entry *logrus.Entry) error          { return fmt.Errorf("Not implemented") }
+func (hook *genericHook) Fire(entry *logrus.Entry) error          { return fmt.Errorf("not implemented") }
 func (hook *genericHook) SetFormatter(formatter logrus.Formatter) { hook.formatter = formatter }
 func (hook *genericHook) Formatter() logrus.Formatter             { return hook.formatter }
 func (hook *genericHook) SetLogger(l *Logger)                     { hook.logger = l }

@@ -40,8 +40,8 @@ func TestGetAcceptedLevels(t *testing.T) {
 func TestParseInvalidLogLevel(t *testing.T) {
 	level, err := TryParseLogLevel("invalid")
 	assert.Equal(t, level, DisabledLevel)
-	assert.EqualError(t, err, `Unable to parse logging level: not a valid logrus Level: "invalid"`)
+	assert.EqualError(t, err, `unable to parse logging level: not a valid logrus Level: "invalid"`)
 	level, err = TryParseLogLevel(1.234)
 	assert.Equal(t, level, DisabledLevel)
-	assert.EqualError(t, err, `Unable to parse logging level: not a valid logrus Level: "1.234"`)
+	assert.EqualError(t, err, `unable to parse logging level: not a valid logrus Level: "1.234"`)
 }

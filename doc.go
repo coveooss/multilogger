@@ -7,7 +7,7 @@ Package multilogger is a thin wrapper around logrus https://github.com/sirupsen/
 Each output (implemented as Hook) have their own logging level.
 It exposes the same API as a regular logrus logger.
 
-How to use it
+# How to use it
 
 So, you can use multilogger to write logs to standard error with a minimal logging level (i.e. WarningLevel) and have the full debug log (i.e. DebugLevel or TraceLevel) written to a file.
 
@@ -24,20 +24,21 @@ So, you can use multilogger to write logs to standard error with a minimal loggi
 
 Differences with logrus
 
- - The multilogger object is based on a logrus.Entry instead of a logrus.Logger.
- - The methods Print, Println and Printf are used to print information directly to stdout without log decoration.
-   Within logrus, these methods are aliases to Info, Infoln and Infof.
- - It is not possible to set the global logging level with multilogger, the logging level is determined by hooks that are
-   added to the logging object and the resulting logging level is the highest logging level defined for individual hooks.
- - Hooks are fired according to their own logging level while they were fired according to the global logging
-   level with logrus.
- - The default formatter used by console and file hook is highly customizable.
+  - The multilogger object is based on a logrus.Entry instead of a logrus.Logger.
+  - The methods Print, Println and Printf are used to print information directly to stdout without log decoration.
+    Within logrus, these methods are aliases to Info, Infoln and Infof.
+  - It is not possible to set the global logging level with multilogger, the logging level is determined by hooks that are
+    added to the logging object and the resulting logging level is the highest logging level defined for individual hooks.
+  - Hooks are fired according to their own logging level while they were fired according to the global logging
+    level with logrus.
+  - The default formatter used by console and file hook is highly customizable.
 
-Where is it used
+# Where is it used
 
 This project is used in other Coveo projects to reduce visual clutter in CI systems while keeping debug logs available when errors arise:
-    gotemplate https://github.com/coveooss/gotemplate
-    terragrunt https://github.com/coveooss/terragrunt
-    tgf        https://github.com/coveooss/tgf
+
+	gotemplate https://github.com/coveooss/gotemplate
+	terragrunt https://github.com/coveooss/terragrunt
+	tgf        https://github.com/coveooss/tgf
 */
 package multilogger

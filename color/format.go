@@ -10,13 +10,13 @@ import (
 // FormatMessage analyses the arguments to determine if Sprintf or Sprintln should be used.
 func FormatMessage(args ...interface{}) string { return formatMessage(sprintlnType, true, args...) }
 
-// Sprint returns a string formated with attributes that are supplied before.
+// Sprint returns a string formatted with attributes that are supplied before.
 func Sprint(args ...interface{}) string { return sprint(sprintType, args...) }
 
-// Sprintf returns a string formated with attributes that are supplied before.
+// Sprintf returns a string formatted with attributes that are supplied before.
 func Sprintf(args ...interface{}) string { return sprint(sprintfType, args...) }
 
-// Sprintln returns a string formated with attributes that are supplied before.
+// Sprintln returns a string formatted with attributes that are supplied before.
 func Sprintln(args ...interface{}) string { return sprint(sprintlnType, args...) }
 
 // Print call standard fmt.Printf function but using the color out stream.
@@ -26,7 +26,7 @@ func Print(args ...interface{}) (int, error) { return fmt.Fprint(color.Output, S
 func Println(args ...interface{}) (int, error) { return fmt.Fprint(color.Output, Sprintln(args...)) }
 
 // Printf behave as Printf, it expects to have a format string after the color attributes.
-func Printf(args ...interface{}) (int, error) { return fmt.Fprintf(color.Output, Sprintf(args...)) }
+func Printf(args ...interface{}) (int, error) { return fmt.Fprint(color.Output, Sprintf(args...)) }
 
 // ErrorPrint call standard fmt.Printf function but using the color out stream.
 func ErrorPrint(args ...interface{}) (int, error) { return fmt.Fprint(color.Error, Sprint(args...)) }
@@ -38,7 +38,7 @@ func ErrorPrintln(args ...interface{}) (int, error) {
 
 // ErrorPrintf call standard fmt.Printf function but using the color out stream.
 func ErrorPrintf(args ...interface{}) (int, error) {
-	return fmt.Fprintf(color.Error, Sprintf(args...))
+	return fmt.Fprint(color.Error, Sprintf(args...))
 }
 
 func sprint(printType printType, args ...interface{}) string {
