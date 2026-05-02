@@ -12,7 +12,7 @@ import (
 
 const (
 	// DisabledLevel can be set when one of the logging hooks should be disabled.
-	DisabledLevel     logrus.Level = math.MaxUint32
+	DisabledLevel     logrus.Level = math.MaxInt32
 	outputLevel                    = DisabledLevel - 1
 	disabledLevelName string       = "disabled"
 )
@@ -32,7 +32,7 @@ func AcceptedLevelsString() string {
 }
 
 // ParseLogLevel converts a string or number into a logging level.
-// It panics if the supplied valid cannot be converted into a valid logrus Level.
+// It panics if the supplied value cannot be converted into a valid logrus Level.
 func ParseLogLevel(level interface{}) logrus.Level {
 	return errors.Must(TryParseLogLevel(level)).(logrus.Level)
 }
